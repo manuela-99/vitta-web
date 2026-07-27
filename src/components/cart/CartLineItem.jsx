@@ -1,5 +1,6 @@
 import { formatPrice } from '../../utils/price';
 import { canOfferSinTaccOption } from '../../utils/preparation';
+import { shouldShowPresentationInCart } from '../../utils/cartDisplay';
 
 export default function CartLineItem({
   item,
@@ -9,65 +10,76 @@ export default function CartLineItem({
   onSinTaccChange,
 }) {
   const showSinTaccOption = canOfferSinTaccOption({ preparationMode: item.preparationMode });
+  const showPresentation = shouldShowPresentationInCart(item);
+  const minQuantity = item.minQuantity ?? 1;
   const checkboxId = `cart-sin-tacc-${item.productId}`;
 
   return (
     <li className="cart-drawer__item">
-      <div className="cart-item__main">
-        <p className="cart-drawer__item-name">{item.name}</p>
-        <p className="cart-drawer__item-meta">
-          <span className="cart-num cart-num--sm">{item.presentationLabel}</span>
-          {' × '}
-          <span className="cart-num cart-num--md">{item.quantity}</span>
-        </p>
-        {item.sinTacc && showSinTaccOption && (
-          <p className="cart-item__prep-summary">Preparación: Sin TACC</p>
-        )}
-        <p className="cart-drawer__item-price menu-price cart-num cart-num--md">
+      <div className="cart-item__head">
+        <div className="cart-item__title-block">
+          <p className="cart-drawer__item-name">{item.name}</p>
+          {showPresentation && (
+            <p className="cart-item__size">
+              <span className="cart-num cart-num--sm">{item.presentationLabel}</span>
+            </p>
+          )}
+        </div>
+        <p className="cart-item__line-price menu-price cart-num cart-num--md">
           {formatPrice(item.subtotal)}
         </p>
       </div>
 
-      <div className="cart-drawer__item-actions">
-        <div className="cart-qty">
-          <button
-            type="button"
-            className="cart-qty__btn"
-            onClick={onDecrement}
-            aria-label={`Reducir ${item.name}`}
-          >
-            −
-          </button>
-          <span className="cart-qty__value">{item.quantity}</span>
-          <button
-            type="button"
-            className="cart-qty__btn"
-            onClick={onIncrement}
-            aria-label={`Aumentar ${item.name}`}
-          >
-            +
-          </button>
+      <div className="cart-item__actions-row">
+        <div className="cart-item__qty-group">
+          <span className="cart-item__qty-label">Cantidad</span>
+          <div className="cart-qty cart-qty--drawer">
+            <button
+              type="button"
+              className="cart-qty__btn"
+              onClick={onDecrement}
+              aria-label={`Reducir ${item.name}`}
+              disabled={item.quantity <= minQuantity}
+            >
+              −
+            </button>
+            <span className="cart-qty__value">{item.quantity}</span>
+            <button
+              type="button"
+              className="cart-qty__btn"
+              onClick={onIncrement}
+              aria-label={`Aumentar ${item.name}`}
+            >
+              +
+            </button>
+          </div>
         </div>
-        <button type="button" className="cart-drawer__remove" onClick={onRemove}>
+
+        {showSinTaccOption && (
+          <label className="cart-item__sin-tacc" htmlFor={checkboxId}>
+            <input
+              id={checkboxId}
+              type="checkbox"
+              className="cart-item__sin-tacc-input"
+              checked={item.sinTacc}
+              onChange={(event) => onSinTaccChange(event.target.checked)}
+            />
+            <span className="cart-item__sin-tacc-box" aria-hidden="true">
+              {item.sinTacc && <span className="cart-item__sin-tacc-check">✓</span>}
+            </span>
+            <span className="cart-item__sin-tacc-label">Sin TACC</span>
+          </label>
+        )}
+
+        <button
+          type="button"
+          className="cart-drawer__remove"
+          onClick={onRemove}
+          aria-label={`Eliminar ${item.name}`}
+        >
           Eliminar
         </button>
       </div>
-
-      {showSinTaccOption && (
-        <label className="cart-item__sin-tacc" htmlFor={checkboxId}>
-          <input
-            id={checkboxId}
-            type="checkbox"
-            className="cart-item__sin-tacc-input"
-            checked={item.sinTacc}
-            onChange={(event) => onSinTaccChange(event.target.checked)}
-          />
-          <span className="cart-item__sin-tacc-box" aria-hidden="true">
-            {item.sinTacc && <span className="cart-item__sin-tacc-check">✓</span>}
-          </span>
-          <span className="cart-item__sin-tacc-label">Preparar Sin TACC</span>
-        </label>
-      )}
     </li>
   );
 }

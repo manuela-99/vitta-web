@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../../context/CartContext';
-import { formatPrice, formatWeight } from '../../utils/price';
+import { formatPrice } from '../../utils/price';
 import {
   buildOrderWhatsAppMessage,
   getOrderWhatsAppLink,
@@ -8,14 +8,14 @@ import {
 } from '../../utils/whatsappOrder';
 import CartLineItem from './CartLineItem';
 
+const CART_CLOSE_MS = 520;
+
 export default function CartDrawer() {
   const {
     items,
     orderNotes,
     isOpen,
-    totalItems,
     totalAmount,
-    totalWeightGrams,
     closeCart,
     incrementProduct,
     decrementProduct,
@@ -24,26 +24,47 @@ export default function CartDrawer() {
     setOrderNotes,
   } = useCart();
   const [orderError, setOrderError] = useState('');
+  const [isRendered, setIsRendered] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    document.body.classList.toggle('cart-open', isOpen);
-    return () => document.body.classList.remove('cart-open');
+    if (isOpen) {
+      setIsRendered(true);
+      const frame = window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setIsAnimating(true));
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    setIsAnimating(false);
+    return undefined;
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return undefined;
+    if (isAnimating || isOpen || !isRendered) return undefined;
+    const timer = window.setTimeout(() => setIsRendered(false), CART_CLOSE_MS);
+    return () => window.clearTimeout(timer);
+  }, [isAnimating, isOpen, isRendered]);
+
+  useEffect(() => {
+    document.body.classList.toggle('cart-open', isRendered);
+    return () => document.body.classList.remove('cart-open');
+  }, [isRendered]);
+
+  useEffect(() => {
+    if (!isRendered) return undefined;
     const onKeyDown = (event) => {
       if (event.key === 'Escape') closeCart();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, closeCart]);
+  }, [isRendered, closeCart]);
 
   useEffect(() => {
     if (isOpen) setOrderError('');
   }, [isOpen, items]);
 
-  if (!isOpen) return null;
+  if (!isRendered) return null;
 
   const handleViewMenu = () => {
     closeCart();
@@ -71,21 +92,35 @@ export default function CartDrawer() {
     window.open(getOrderWhatsAppLink(message), '_blank', 'noopener,noreferrer');
   };
 
-  const trimmedOrderNotes = orderNotes.trim();
-
-  const productCountLabel =
-    totalItems === 1 ? (
+  const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
+  const quantitySummaryValue =
+    totalUnits === 1 ? (
       <>
         <span className="cart-num cart-num--sm">1</span> producto
       </>
     ) : (
       <>
-        <span className="cart-num cart-num--sm">{totalItems.toLocaleString('es-AR')}</span> productos
+        <span className="cart-num cart-num--sm">{totalUnits.toLocaleString('es-AR')}</span> productos
       </>
     );
 
+  const renderCheckout = (className = '') => (
+    <button
+      type="button"
+      className={`cart-drawer__checkout${className ? ` ${className}` : ''}`}
+      onClick={handlePlaceOrder}
+    >
+      Realizar pedido
+    </button>
+  );
+
   return (
-    <div className="cart-drawer" role="dialog" aria-modal="true" aria-label="Carrito">
+    <div
+      className={`cart-drawer${isAnimating ? ' cart-drawer--visible cart-drawer--open' : ' cart-drawer--visible'}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Carrito"
+    >
       <button type="button" className="cart-drawer__backdrop" onClick={closeCart} aria-label="Cerrar carrito" />
       <aside className="cart-drawer__panel">
         <header className="cart-drawer__header">
@@ -104,67 +139,75 @@ export default function CartDrawer() {
           </div>
         ) : (
           <>
-            <ul className="cart-drawer__list">
-              {items.map((item) => (
-                <CartLineItem
-                  key={item.productId}
-                  item={item}
-                  onIncrement={() => incrementProduct(item.productId)}
-                  onDecrement={() => decrementProduct(item.productId)}
-                  onRemove={() => removeProduct(item.productId)}
-                  onSinTaccChange={(value) => setItemSinTacc(item.productId, value)}
-                />
-              ))}
-            </ul>
+            <div className="cart-drawer__body">
+              <div className="cart-drawer__items-col">
+                <ul className="cart-drawer__list">
+                  {items.map((item) => (
+                    <CartLineItem
+                      key={item.productId}
+                      item={item}
+                      onIncrement={() => incrementProduct(item.productId)}
+                      onDecrement={() => decrementProduct(item.productId)}
+                      onRemove={() => removeProduct(item.productId)}
+                      onSinTaccChange={(value) => setItemSinTacc(item.productId, value)}
+                    />
+                  ))}
+                </ul>
 
-            <div className="cart-drawer__order-notes">
-              <label className="cart-drawer__order-notes-label" htmlFor="cart-order-notes">
-                ¿Querés aclarar algo sobre tu pedido?
-              </label>
-              <textarea
-                id="cart-order-notes"
-                className="cart-drawer__order-notes-input"
-                rows={2}
-                value={orderNotes}
-                placeholder="Ej.: sin cebolla, salsa aparte, indicaciones generales…"
-                onChange={(event) => setOrderNotes(event.target.value)}
-              />
-            </div>
-
-            <footer className="cart-drawer__footer">
-              <div className="cart-drawer__summary">
-                <p className="cart-drawer__summary-title">Resumen del pedido</p>
-                <p className="cart-drawer__summary-line">{productCountLabel}</p>
-                {totalWeightGrams > 0 && (
-                  <p className="cart-drawer__summary-line">
-                    Peso total:{' '}
-                    <span className="cart-num cart-num--sm">{formatWeight(totalWeightGrams)}</span>
-                  </p>
-                )}
-                {trimmedOrderNotes && (
-                  <p className="cart-drawer__summary-line cart-drawer__summary-notes">
-                    Aclaraciones: {trimmedOrderNotes}
-                  </p>
-                )}
-                <p className="cart-drawer__summary-total">
-                  <span>Total</span>
-                  <span className="menu-price cart-num cart-num--lg">{formatPrice(totalAmount)}</span>
-                </p>
-                <p className="cart-drawer__summary-note">
-                  El pago y la entrega se coordinan por WhatsApp.
-                </p>
+                <div className="cart-drawer__quantity-summary" aria-live="polite">
+                  <span className="cart-drawer__quantity-summary-label">Cantidad de productos</span>
+                  <span className="cart-drawer__quantity-summary-value">{quantitySummaryValue}</span>
+                </div>
               </div>
 
+              <div className="cart-drawer__sidebar">
+                <div className="cart-drawer__order-notes">
+                  <p className="cart-drawer__order-notes-heading">Aclaraciones</p>
+                  <label className="cart-drawer__order-notes-label" htmlFor="cart-order-notes">
+                    ¿Querés aclarar algo?
+                  </label>
+                  <textarea
+                    id="cart-order-notes"
+                    className="cart-drawer__order-notes-input"
+                    value={orderNotes}
+                    placeholder="Ej.: sin cebolla, salsa aparte o indicaciones generales."
+                    onChange={(event) => setOrderNotes(event.target.value)}
+                  />
+                </div>
+
+                <footer className="cart-drawer__footer">
+                  <div className="cart-drawer__summary-total">
+                    <span>Total</span>
+                    <span className="menu-price cart-num cart-num--lg">{formatPrice(totalAmount)}</span>
+                  </div>
+
+                  <p className="cart-drawer__summary-note">
+                    El pago y la entrega se coordinan por WhatsApp.
+                  </p>
+
+                  {orderError && (
+                    <p className="cart-drawer__order-error" role="alert">
+                      {orderError}
+                    </p>
+                  )}
+
+                  <div className="cart-drawer__footer-actions">{renderCheckout()}</div>
+                </footer>
+              </div>
+            </div>
+
+            <div className="cart-drawer__mobile-bar">
+              <div className="cart-drawer__mobile-total">
+                <span className="cart-drawer__mobile-total-label">Total</span>
+                <span className="menu-price cart-num cart-num--lg">{formatPrice(totalAmount)}</span>
+              </div>
               {orderError && (
-                <p className="cart-drawer__order-error" role="alert">
+                <p className="cart-drawer__order-error cart-drawer__order-error--mobile" role="alert">
                   {orderError}
                 </p>
               )}
-
-              <button type="button" className="cart-drawer__checkout" onClick={handlePlaceOrder}>
-                Realizar pedido
-              </button>
-            </footer>
+              {renderCheckout()}
+            </div>
           </>
         )}
       </aside>

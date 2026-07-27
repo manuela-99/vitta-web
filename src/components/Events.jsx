@@ -1,12 +1,13 @@
 import { events } from '../data/siteContent';
 import { WHATSAPP_LINK } from '../data/whatsapp';
+import Reveal from './Reveal';
 
 export default function Events() {
   return (
     <section id="eventos" className="events chapter-section chapter-panel" aria-label="Eventos">
       <div className="chapter-panel__inner panel-frame">
         <div className="events__layout">
-          <div className="events__content">
+          <Reveal className="events__content">
             <h2 className="events__title script-title">{events.title}</h2>
             <p className="events__lead">{events.paragraphs[0]}</p>
             <p className="events__accent">{events.paragraphs[1]}</p>
@@ -18,8 +19,8 @@ export default function Events() {
             >
               {events.cta}
             </a>
-          </div>
-          <div className="events__media" aria-hidden="true">
+          </Reveal>
+          <Reveal className="events__media" delay={100} aria-hidden="true">
             <img
               className="events__illustration"
               src="/assets/eventos.png"
@@ -28,7 +29,7 @@ export default function Events() {
               height={920}
               decoding="async"
             />
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

@@ -1,5 +1,7 @@
 import { freezerGlutenInfo, freezerIntro } from '../data/siteContent';
 import SinTaccInfoBlock from './SinTaccInfoBlock';
+import Reveal from './Reveal';
+import { renderTextLines } from '../utils/renderTextLines';
 
 export default function FreezerIntro() {
   return (
@@ -9,25 +11,14 @@ export default function FreezerIntro() {
       aria-label="Freezer Ready"
     >
       <div className="freezer-intro__inner chapter-section__inner">
-        <header className="freezer-intro__header">
+        <Reveal as="header" className="freezer-intro__header">
           <h2 className="chapter-section__title script-title freezer-intro__title">{freezerIntro.title}</h2>
           <p className="chapter-section__lead freezer-intro__lead">
-            {freezerIntro.subtitleLines.map((line, index) => (
-              <span key={line}>
-                {index > 0 ? (
-                  <>
-                    <br aria-hidden="true" />
-                    {line}
-                  </>
-                ) : (
-                  line
-                )}
-              </span>
-            ))}
+            {renderTextLines(freezerIntro.subtitleLines)}
           </p>
-        </header>
+        </Reveal>
 
-        <div className="freezer-intro__minimums">
+        <Reveal className="freezer-intro__minimums" delay={100}>
           {freezerIntro.items.map((item) => (
             <article key={item.name} className="freezer-intro__minimums-row">
               <h3 className="freezer-intro__minimums-name">{item.name}</h3>
@@ -37,14 +28,16 @@ export default function FreezerIntro() {
               </p>
             </article>
           ))}
-        </div>
+        </Reveal>
 
-        <SinTaccInfoBlock
-          title={freezerGlutenInfo.title}
-          body={freezerGlutenInfo.body}
-          variant="dark"
-          layout="compact"
-        />
+        <Reveal delay={180}>
+          <SinTaccInfoBlock
+            title={freezerGlutenInfo.title}
+            body={freezerGlutenInfo.body}
+            variant="dark"
+            layout="compact"
+          />
+        </Reveal>
       </div>
     </section>
   );

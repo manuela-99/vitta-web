@@ -18,10 +18,7 @@ export const services = {
     {
       number: '01',
       title: 'EVENTOS',
-      description: [
-        'Comidas privadas, catering y celebraciones a medida,',
-        'con el chef en tu casa.',
-      ],
+      description: ['Comidas privadas, catering y celebraciones a medida.'],
       href: '#eventos',
       image: '/images/foto-eventos.jpeg',
       secondaryImage: '/assets/manos-vitta.png',
@@ -32,7 +29,7 @@ export const services = {
       number: '02',
       title: 'VIANDAS',
       description: [
-        'Comidas elaboradas por un chef, listas para todos los días.',
+        'Comidas elaboradas, listas para todos los días.',
         'Prácticas, abundantes y reales.',
       ],
       href: '#viandas',
@@ -76,10 +73,6 @@ export const viandasIntro = {
     {
       heading: 'PORCIONES',
       body: 'Cada preparación se porciona por peso para asegurar una cantidad abundante en cada pedido.',
-      bodyLines: [
-        'Cada preparación se porciona por peso para',
-        'asegurar una cantidad abundante en cada pedido.',
-      ],
       detail: [
         { weight: '250 g', label: 'Individual abundante' },
         { weight: '500 g', label: 'Para 2–3 personas' },
@@ -88,21 +81,15 @@ export const viandasIntro = {
     {
       heading: 'PREPARACIÓN',
       body: '20 minutos de horno y listo para disfrutar.',
-      bodyLines: ['20 minutos de horno', 'y listo para disfrutar.'],
     },
     {
       heading: 'ENTREGA',
       body: 'Las comidas se entregan con la guarnición separada para conservar mejor cada preparación.',
-      bodyLines: [
-        'Las comidas se entregan con la guarnición',
-        'separada para conservar mejor cada preparación.',
-      ],
-      note: 'Ensaladas en frascos retornables.',
+      note: 'Ensaladas en frascos de vidrio herméticos retornables.',
     },
     {
       heading: 'CONSERVACIÓN',
       body: 'Hasta 4 días en heladera y hasta 3 meses en el freezer.',
-      bodyLines: ['Hasta 4 días en heladera', 'y hasta 3 meses en el freezer.'],
     },
   ],
 };
@@ -177,7 +164,7 @@ export const viandasMenuPart1 = {
             'Puerro, panceta y queso',
             'Espinaca',
             'Jamón y queso',
-            'Capresse',
+            'Caprese',
             'Atún',
             'Calabaza y brie',
             'Pollo desmenuzado',
@@ -283,18 +270,18 @@ export const freezerMenu = {
     {
       name: 'EMPANADAS',
       price: '$36.000 · 1 docena',
-      items: ['Carne cuchillo', 'Jamon y Queso', 'Pollo', 'Bondiola', 'Calabaza, Nuez y Roque'],
+      items: ['Carne cuchillo', 'Jamón y queso', 'Pollo', 'Bondiola', 'Calabaza, nuez y roque'],
     },
     {
       name: 'PASTAS',
       price: '$17.900 · 1 caja (400g)',
       items: [
         'Gnoccis de papa',
-        'Gnoccis Souffles',
-        'Ravioles Jamon y Muzza',
-        'Ravioles Ricotta y Espinaca',
-        'Sorrentinos Jamon y Muzza',
-        'Sorrentinos Ricotta y Espinaca',
+        'Gnoccis souffles',
+        'Ravioles de jamón y muzzarella',
+        'Ravioles de ricotta y espinaca',
+        'Sorrentinos de jamón y muzzarella',
+        'Sorrentinos de ricotta y espinaca',
       ],
     },
     {
@@ -314,6 +301,9 @@ export const freezerMenu = {
 
 export const contact = {
   title: 'Contacto',
-  body: 'Contanos qué estás imaginando y diseñemos juntos una experiencia a medida.',
+  bodyLines: [
+    'Contanos qué estás imaginando y',
+    'diseñemos juntos una experiencia a medida.',
+  ],
   cta: 'ESCRIBINOS POR WHATSAPP',
 };

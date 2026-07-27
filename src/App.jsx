@@ -11,6 +11,7 @@ import FreezerMenu from './components/FreezerMenu';
 import Contact from './components/Contact';
 import CartDrawer from './components/cart/CartDrawer';
 import { useMenuLock, useEscapeKey } from './components/HamburgerButton';
+import { useHeroIntro } from './hooks/useRevealOnce';
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -21,6 +22,7 @@ function App() {
 
   useMenuLock(menuOpen);
   useEscapeKey(menuOpen, closeMenu);
+  useHeroIntro();
 
   const handleNavigate = useCallback((href) => {
     const target = document.querySelector(href);
@@ -42,7 +44,8 @@ function App() {
       atSection('.services') ||
       atSection('.freezer-intro') ||
       atSection('.menu-section--dark') ||
-      atSection('.contact')
+      atSection('.contact') ||
+      atSection('.site-footer')
     ) {
       setHeaderVariant('light');
     } else {

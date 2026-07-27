@@ -1,4 +1,5 @@
 import { WHATSAPP_NUMBER } from '../data/whatsapp';
+import { shouldShowPresentationInWhatsApp } from './cartDisplay';
 import { formatPrice, formatWeight } from './price';
 
 export function computeCartTotals(items) {
@@ -28,7 +29,9 @@ export function buildOrderWhatsAppMessage(items, orderNotes = '') {
   items.forEach((item, index) => {
     const itemTitle = item.sinTacc ? `${item.name} — Sin TACC` : item.name;
     lines.push(`${index + 1}. ${itemTitle}`);
-    lines.push(`• Presentación: ${item.presentationLabel}`);
+    if (shouldShowPresentationInWhatsApp(item)) {
+      lines.push(`• Presentación: ${item.presentationLabel}`);
+    }
     lines.push(`• Cantidad: ${item.quantity}`);
     if (item.totalWeightGrams) {
       lines.push(`• Peso total: ${formatWeight(item.totalWeightGrams)}`);

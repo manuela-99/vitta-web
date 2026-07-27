@@ -1,5 +1,6 @@
 import MenuCategoryBlock from './MenuCategoryBlock';
 import { viandasMenu } from '../data/siteContent';
+import Reveal from './Reveal';
 
 export default function ViandasMenu() {
   const { title, primaryCategories, wideCategories } = viandasMenu;
@@ -18,15 +19,17 @@ export default function ViandasMenu() {
   return (
     <section className="menu-section viandas-menu" aria-label="Menú de viandas">
       <div className="menu-section__inner">
-        <h2 className="menu-section__title script-title">{title}</h2>
+        <Reveal as="h2" className="menu-section__title script-title" delay={0}>
+          {title}
+        </Reveal>
 
-        <div className="menu-paired-grid">
+        <Reveal className="menu-paired-grid" delay={100}>
           {categories.map((category) => (
             <div key={category.name} className="menu-paired-grid__cell">
-              <MenuCategoryBlock category={category} />
+              <MenuCategoryBlock category={category} hideCategoryPrices />
             </div>
           ))}
-        </div>
+        </Reveal>
       </div>
     </section>
   );

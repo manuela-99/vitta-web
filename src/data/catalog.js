@@ -100,6 +100,7 @@ function buildViandasProducts(category) {
         portionsPerUnit: variant.portions ?? null,
         panelLabel: config.panelLabel,
         preparationMode: getPreparationMode('viandas', category.name),
+        showPresentationInCart: config.variants.length > 1,
       };
     }),
   );

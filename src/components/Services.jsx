@@ -1,37 +1,21 @@
 import { useEffect } from 'react';
 import { services } from '../data/siteContent';
+import Reveal from './Reveal';
+import ServiceImageCrossfade, { SERVICE_IMAGE_START_DELAYS } from './ServiceImageCrossfade';
 
-const ANIMATION_DELAYS = {
-  featured: 0,
-  compact: 1.2,
-  compactSecond: 2.4,
-};
-
-function ServiceImageLayers({ item }) {
+function ServiceBlock({ item, variant, delay = 0 }) {
   return (
-    <img
-      className="service-block__image-layer service-block__image-layer--secondary"
-      src={item.secondaryImage}
-      alt=""
-      aria-hidden="true"
-    />
-  );
-}
-
-function ServiceBlock({ item, variant, animationDelay = 0 }) {
-  return (
-    <article
+    <Reveal
+      as="article"
       className={`service-block service-block--${variant} service-block--${item.imageKey}`}
-      style={{ '--service-image-delay': `${animationDelay}s` }}
+      delay={delay}
     >
       <div className="service-block__media">
         <a href={item.href} className="service-block__image-link">
           <div className="service-block__image">
-            <ServiceImageLayers item={item} />
-            <img
-              className="service-block__image-layer service-block__image-layer--primary"
-              src={item.image}
-              alt={item.alt}
+            <ServiceImageCrossfade
+              item={item}
+              startDelay={SERVICE_IMAGE_START_DELAYS[item.imageKey] ?? 0}
             />
           </div>
         </a>
@@ -63,7 +47,7 @@ function ServiceBlock({ item, variant, animationDelay = 0 }) {
           SABER MÁS
         </a>
       </div>
-    </article>
+    </Reveal>
   );
 }
 
@@ -83,24 +67,20 @@ export default function Services() {
   return (
     <section className="services" aria-label="Servicios">
       <div className="services__inner">
-        <header className="services__header">
+        <Reveal as="header" className="services__header">
           <h2 className="services__title script-title">
             <span className="services__title-line">Tres formas</span>
             <span className="services__title-line">de acompañarte.</span>
           </h2>
           <p className="services__intro">{services.intro}</p>
-        </header>
+        </Reveal>
 
         <div className="services__composition">
-          <ServiceBlock item={eventos} variant="featured" animationDelay={ANIMATION_DELAYS.featured} />
+          <ServiceBlock item={eventos} variant="featured" delay={0} />
 
           <div className="services__stack">
-            <ServiceBlock item={viandas} variant="compact" animationDelay={ANIMATION_DELAYS.compact} />
-            <ServiceBlock
-              item={freezer}
-              variant="compact"
-              animationDelay={ANIMATION_DELAYS.compactSecond}
-            />
+            <ServiceBlock item={viandas} variant="compact" delay={100} />
+            <ServiceBlock item={freezer} variant="compact" delay={200} />
           </div>
         </div>
       </div>

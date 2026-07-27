@@ -28,6 +28,8 @@ function buildLineItem(product, quantity, extras = {}) {
     totalWeightGrams,
     preparationMode: product.preparationMode,
     sinTacc,
+    showPresentationInCart: product.showPresentationInCart ?? true,
+    minQuantity,
     subtotal: safeQuantity * product.unitPrice,
   };
 }

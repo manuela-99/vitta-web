@@ -1,5 +1,7 @@
 import { viandasIntro, viandasGlutenInfo } from '../data/siteContent';
 import SinTaccInfoBlock from './SinTaccInfoBlock';
+import Reveal from './Reveal';
+import { renderTextLines } from '../utils/renderTextLines';
 
 function withEditorialNumerals(text) {
   const parts = text.split(/(\d+)/g);
@@ -15,6 +17,24 @@ function withEditorialNumerals(text) {
   );
 }
 
+function renderFactNote(text) {
+  const emphasis = 'retornables';
+  const index = text.toLowerCase().lastIndexOf(emphasis);
+  if (index === -1) return withEditorialNumerals(text);
+
+  const before = text.slice(0, index);
+  const emphasized = text.slice(index, index + emphasis.length);
+  const after = text.slice(index + emphasis.length);
+
+  return (
+    <>
+      {withEditorialNumerals(before)}
+      <strong>{emphasized}</strong>
+      {after}
+    </>
+  );
+}
+
 function FactBlock({ heading, body, bodyLines, children }) {
   const renderBody = (text) => withEditorialNumerals(text);
 
@@ -23,22 +43,9 @@ function FactBlock({ heading, body, bodyLines, children }) {
       <h3 className="viandas-intro__fact-heading">{heading}</h3>
       <div className="viandas-intro__fact-rule" aria-hidden="true" />
       <p className="viandas-intro__fact-body">
-        {bodyLines ? (
-          bodyLines.map((line, index) => (
-            <span key={line}>
-              {index > 0 ? (
-                <>
-                  <br className="viandas-intro__fact-break" aria-hidden="true" />
-                  {renderBody(line)}
-                </>
-              ) : (
-                renderBody(line)
-              )}
-            </span>
-          ))
-        ) : (
-          renderBody(body)
-        )}
+        {bodyLines?.length
+          ? renderTextLines(bodyLines, renderBody)
+          : renderBody(body)}
       </p>
       {children}
     </article>
@@ -51,29 +58,17 @@ export default function ViandasIntro() {
   return (
     <section id="viandas" className="viandas-intro chapter-section chapter-panel" aria-label="Viandas">
       <div className="chapter-panel__inner panel-frame">
-        <header className="viandas-intro__header">
+        <Reveal as="header" className="viandas-intro__header">
           <h2 className="chapter-panel__title script-title viandas-intro__title">{viandasIntro.title}</h2>
           <p className="chapter-panel__lead viandas-intro__lead">
-            {viandasIntro.subtitleLines.map((line, index) => (
-              <span key={line}>
-                {index > 0 ? (
-                  <>
-                    <br aria-hidden="true" />
-                    {line}
-                  </>
-                ) : (
-                  line
-                )}
-              </span>
-            ))}
+            {renderTextLines(viandasIntro.subtitleLines)}
           </p>
-        </header>
+        </Reveal>
 
-        <div className="viandas-intro__facts">
+        <Reveal className="viandas-intro__facts" delay={100}>
           <FactBlock
             heading={portionsBlock.heading}
             body={portionsBlock.body}
-            bodyLines={portionsBlock.bodyLines}
           >
             <div className="viandas-intro__portions-detail">
               {portionsBlock.detail.map((item) => (
@@ -89,31 +84,30 @@ export default function ViandasIntro() {
           <FactBlock
             heading={preparacionBlock.heading}
             body={preparacionBlock.body}
-            bodyLines={preparacionBlock.bodyLines}
           />
 
           <FactBlock
             heading={entregaBlock.heading}
             body={entregaBlock.body}
-            bodyLines={entregaBlock.bodyLines}
           >
             {entregaBlock.note ? (
-              <p className="viandas-intro__fact-note">{withEditorialNumerals(entregaBlock.note)}</p>
+              <p className="viandas-intro__fact-note">{renderFactNote(entregaBlock.note)}</p>
             ) : null}
           </FactBlock>
 
           <FactBlock
             heading={conservacionBlock.heading}
             body={conservacionBlock.body}
-            bodyLines={conservacionBlock.bodyLines}
           />
-        </div>
+        </Reveal>
 
-        <SinTaccInfoBlock
-          title={viandasGlutenInfo.title}
-          body={viandasGlutenInfo.body}
-          layout="compact"
-        />
+        <Reveal delay={180}>
+          <SinTaccInfoBlock
+            title={viandasGlutenInfo.title}
+            body={viandasGlutenInfo.body}
+            layout="compact"
+          />
+        </Reveal>
       </div>
     </section>
   );

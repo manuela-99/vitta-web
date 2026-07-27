@@ -1,6 +1,7 @@
 import { freezerMenu } from '../data/siteContent';
 import { getProductsForDish } from '../data/catalog';
 import MenuDishRow from './cart/MenuDishRow';
+import Reveal from './Reveal';
 
 function FreezerCategoryBlock({ category }) {
   return (
@@ -36,14 +37,16 @@ export default function FreezerMenu() {
   return (
     <section className="menu-section menu-section--dark" aria-label="Menú Freezer Ready">
       <div className="menu-section__inner">
-        <h2 className="menu-section__title script-title">{freezerMenu.title}</h2>
-        <div className="menu-paired-grid">
+        <Reveal as="h2" className="menu-section__title script-title">
+          {freezerMenu.title}
+        </Reveal>
+        <Reveal className="menu-paired-grid" delay={100}>
           {categories.map((category) => (
             <div key={category.name} className="menu-paired-grid__cell">
               <FreezerCategoryBlock category={category} />
             </div>
           ))}
-        </div>
+        </Reveal>
       </div>
     </section>
   );

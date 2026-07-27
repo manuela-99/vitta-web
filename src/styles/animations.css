@@ -1,0 +1,316 @@
+/* ── Motion tokens ── */
+:root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-duration: 700ms;
+}
+
+/* ── Scroll reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--motion-duration) var(--motion-ease) var(--reveal-delay, 0ms),
+    transform var(--motion-duration) var(--motion-ease) var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal--scale {
+  transform: translateY(18px) scale(0.985);
+}
+
+.reveal--scale.is-revealed {
+  transform: translateY(0) scale(1);
+}
+
+.reveal--subtle {
+  transform: translateY(12px);
+}
+
+.reveal--number {
+  transform: translateY(12px);
+}
+
+/* ── Hero intro (once on load) ── */
+.hero-philosophy__logo-main,
+.hero-philosophy__title,
+.hero-philosophy__body {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+}
+
+.hero-intro--active .hero-philosophy__logo-main {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0ms;
+}
+
+.hero-intro--active .hero-philosophy__title {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 220ms;
+}
+
+.hero-intro--active .hero-philosophy__body {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 420ms;
+}
+
+.hero-intro--done .hero-philosophy__logo-main,
+.hero-intro--done .hero-philosophy__title,
+.hero-intro--done .hero-philosophy__body {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* ── Service photo hover (desktop) ── */
+@media (hover: hover) and (pointer: fine) {
+  .service-block__image-layer {
+    transition: opacity 1000ms ease-in-out, transform 800ms var(--motion-ease);
+  }
+
+  .service-block__image-link:hover .service-block__image-layer,
+  .service-block__image-link:focus-visible .service-block__image-layer {
+    transform: scale(1.025);
+  }
+}
+
+/* ── SABER MÁS underline ── */
+.services .service-block__link.text-link {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  transition:
+    background-size 280ms var(--motion-ease),
+    opacity 250ms ease,
+    color 280ms ease;
+}
+
+.services .service-block__link.text-link:hover,
+.services .service-block__link.text-link:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* ── Service block numbers ── */
+.reveal.is-revealed .service-block__number {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: calc(var(--reveal-delay, 0ms) + 90ms);
+}
+
+.service-block__number {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+}
+
+/* ── Menu product panel ── */
+.menu-dish-row__panel-anim {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition:
+    grid-template-rows 400ms var(--motion-ease),
+    opacity 380ms var(--motion-ease),
+    transform 400ms var(--motion-ease);
+}
+
+.menu-dish-row__panel-anim.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.menu-dish-row__panel-anim-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.menu-dish-row--viandas .menu-dish-row__panel-anim.is-open {
+  margin-top: 0;
+}
+
+.menu-dish-row__panel-anim .menu-dish-row__panel,
+.menu-dish-row__panel-anim .menu-dish-row__panel--viandas {
+  margin-top: 0;
+}
+
+.menu-dish-row__toggle {
+  transition: transform 320ms var(--motion-ease), opacity 250ms ease;
+}
+
+.menu-dish-row__head--viandas[aria-expanded='true'] .menu-dish-row__toggle,
+.menu-dish-row__toggle[aria-expanded='true'] {
+  transform: rotate(45deg);
+}
+
+/* ── Cart drawer ── */
+.cart-drawer {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.cart-drawer--visible {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.cart-drawer__backdrop {
+  opacity: 0;
+  transition: opacity 500ms var(--motion-ease);
+}
+
+.cart-drawer--open .cart-drawer__backdrop {
+  opacity: 1;
+}
+
+.cart-drawer__panel {
+  transform: translateX(100%);
+  transition: transform 520ms var(--motion-ease);
+}
+
+.cart-drawer--open .cart-drawer__panel {
+  transform: translateX(0);
+}
+
+.cart-drawer__header,
+.cart-drawer__body,
+.cart-drawer__empty,
+.cart-drawer__mobile-bar {
+  opacity: 0;
+  transition: opacity 360ms var(--motion-ease) 120ms;
+}
+
+.cart-drawer--open .cart-drawer__header,
+.cart-drawer--open .cart-drawer__body,
+.cart-drawer--open .cart-drawer__empty,
+.cart-drawer--open .cart-drawer__mobile-bar {
+  opacity: 1;
+}
+
+/* ── Contact stagger ── */
+.contact__title,
+.contact__body,
+.contact__whatsapp-btn {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity var(--motion-duration) var(--motion-ease),
+    transform var(--motion-duration) var(--motion-ease);
+}
+
+.contact.is-revealed .contact__title {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0ms;
+}
+
+.contact.is-revealed .contact__body {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 100ms;
+}
+
+.contact.is-revealed .contact__whatsapp-btn {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 200ms;
+}
+
+/* ── Button / link transitions ── */
+.events__cta,
+.contact .contact__whatsapp-btn.whatsapp-btn,
+.cart-drawer__checkout,
+.menu-dish-panel__add--viandas,
+.menu-dish-panel__add,
+.menu-dish-panel__segment,
+.cart-qty__btn,
+.site-footer__whatsapp a,
+.site-footer__back-top {
+  transition:
+    background-color 280ms var(--motion-ease),
+    color 280ms var(--motion-ease),
+    border-color 280ms var(--motion-ease),
+    opacity 280ms ease;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal,
+  .reveal--scale,
+  .reveal--subtle,
+  .reveal--number {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .hero-philosophy__logo-main,
+  .hero-philosophy__title,
+  .hero-philosophy__body,
+  .contact__title,
+  .contact__body,
+  .contact__whatsapp-btn {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .service-block__number {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .menu-dish-row__panel-anim:not(.is-open) {
+    display: none;
+  }
+
+  .cart-drawer,
+  .cart-drawer__backdrop,
+  .cart-drawer__panel,
+  .cart-drawer__header,
+  .cart-drawer__body,
+  .cart-drawer__empty,
+  .cart-drawer__mobile-bar {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .service-block__image-layer {
+    transition: none;
+  }
+
+  .service-block__image-layer--secondary {
+    display: none;
+  }
+
+  .service-block__image-layer--primary {
+    opacity: 1;
+  }
+
+  .menu-dish-row__toggle {
+    transition: none;
+  }
+}
