@@ -9,7 +9,7 @@ export default function CartLineItem({
   onRemove,
   onSinTaccChange,
 }) {
-  const showSinTaccOption = canOfferSinTaccOption({ preparationMode: item.preparationMode });
+  const showSinTaccOption = canOfferSinTaccOption(item);
   const showPresentation = shouldShowPresentationInCart(item);
   const minQuantity = item.minQuantity ?? 1;
   const checkboxId = `cart-sin-tacc-${item.productId}`;

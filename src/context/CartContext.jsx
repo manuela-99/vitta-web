@@ -11,7 +11,9 @@ const LEGACY_STORAGE_KEY = 'vitta-cart-v1';
 function buildLineItem(product, quantity, extras = {}) {
   const minQuantity = product.minQuantity ?? 1;
   const safeQuantity = Math.max(minQuantity, quantity);
-  const sinTacc = extras.sinTacc !== undefined ? extras.sinTacc : getInitialSinTacc(product);
+  const canBeGlutenFree = product.canBeGlutenFree === true;
+  let sinTacc = extras.sinTacc !== undefined ? extras.sinTacc : getInitialSinTacc();
+  if (!canBeGlutenFree) sinTacc = false;
   const totalWeightGrams = product.gramsPerUnit ? product.gramsPerUnit * safeQuantity : null;
 
   return {
@@ -26,7 +28,7 @@ function buildLineItem(product, quantity, extras = {}) {
     unitPriceLabel: product.unitPriceLabel,
     gramsPerUnit: product.gramsPerUnit ?? null,
     totalWeightGrams,
-    preparationMode: product.preparationMode,
+    canBeGlutenFree,
     sinTacc,
     showPresentationInCart: product.showPresentationInCart ?? true,
     minQuantity,
@@ -107,7 +109,7 @@ export function CartProvider({ children }) {
           sinTacc:
             preserve.sinTacc ??
             existing?.sinTacc ??
-            getInitialSinTacc(product),
+            getInitialSinTacc(),
         });
 
         if (index === -1) {
@@ -131,7 +133,7 @@ export function CartProvider({ children }) {
       const existing = current.find((item) => item.productId === productId);
       const nextQuantity = (existing?.quantity ?? 0) + quantity;
       const lineItem = buildLineItem(product, nextQuantity, {
-        sinTacc: existing?.sinTacc ?? getInitialSinTacc(product),
+        sinTacc: existing?.sinTacc ?? getInitialSinTacc(),
       });
       const next = existing
         ? current.map((item) => (item.productId === productId ? lineItem : item))
@@ -182,9 +184,11 @@ export function CartProvider({ children }) {
   const setItemSinTacc = useCallback(
     (productId, sinTacc) => {
       setItems((prev) => {
-        const next = prev.map((item) =>
-          item.productId === productId ? { ...item, sinTacc } : item,
-        );
+        const next = prev.map((item) => {
+          if (item.productId !== productId) return item;
+          if (sinTacc && !item.canBeGlutenFree) return item;
+          return { ...item, sinTacc };
+        });
         persistCart(next, orderNotes);
         return next;
       });

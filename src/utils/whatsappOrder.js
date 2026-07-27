@@ -1,5 +1,6 @@
 import { WHATSAPP_NUMBER } from '../data/whatsapp';
 import { shouldShowPresentationInWhatsApp } from './cartDisplay';
+import { canOfferSinTaccOption } from './preparation';
 import { formatPrice, formatWeight } from './price';
 
 export function computeCartTotals(items) {
@@ -27,7 +28,10 @@ export function buildOrderWhatsAppMessage(items, orderNotes = '') {
   const lines = ['Hola Vitta, quiero realizar este pedido:', ''];
 
   items.forEach((item, index) => {
-    const itemTitle = item.sinTacc ? `${item.name} — Sin TACC` : item.name;
+    const itemTitle =
+      item.sinTacc && canOfferSinTaccOption(item)
+        ? `${item.name} — Sin TACC`
+        : item.name;
     lines.push(`${index + 1}. ${itemTitle}`);
     if (shouldShowPresentationInWhatsApp(item)) {
       lines.push(`• Presentación: ${item.presentationLabel}`);

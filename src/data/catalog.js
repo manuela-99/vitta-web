@@ -66,16 +66,10 @@ const VIANDAS_PRESENTATIONS = {
   },
 };
 
-const FREEZER_PREPARATION_MODE = {
-  EMPANADAS: 'sin-tacc-only',
-  MILANESAS: 'sin-tacc-only',
-  PASTAS: 'con-tacc-only',
-  SALSAS: 'choice',
-};
+const PASTAS_CATEGORY = 'PASTAS';
 
-function getPreparationMode(section, categoryName) {
-  if (section === 'viandas') return 'choice';
-  return FREEZER_PREPARATION_MODE[categoryName] ?? 'choice';
+export function getCanBeGlutenFree(categoryName) {
+  return categoryName !== PASTAS_CATEGORY;
 }
 
 function buildViandasProducts(category) {
@@ -99,7 +93,7 @@ function buildViandasProducts(category) {
         gramsPerUnit: variant.grams ?? null,
         portionsPerUnit: variant.portions ?? null,
         panelLabel: config.panelLabel,
-        preparationMode: getPreparationMode('viandas', category.name),
+        canBeGlutenFree: getCanBeGlutenFree(category.name),
         showPresentationInCart: config.variants.length > 1,
       };
     }),
@@ -119,7 +113,7 @@ function buildFreezerFlavorProducts(categoryName, categoryId, itemNames, present
     panelLabel: null,
     minQuantity,
     quantityUnit: presentation.quantityUnit,
-    preparationMode: getPreparationMode('freezer', categoryName),
+    canBeGlutenFree: getCanBeGlutenFree(categoryName),
   }));
 }
 
@@ -145,7 +139,7 @@ function buildFreezerProducts() {
           minQuantity: 1,
           quantityUnit: 'kg',
           gramsPerUnit: 1000,
-          preparationMode: getPreparationMode('freezer', column.name),
+          canBeGlutenFree: getCanBeGlutenFree(column.name),
         });
       });
       return;
