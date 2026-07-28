@@ -1,6 +1,6 @@
 import { useRevealOnce } from '../hooks/useRevealOnce';
 import { contact } from '../data/siteContent';
-import { WHATSAPP_DISPLAY, WHATSAPP_LINK } from '../data/whatsapp';
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL, WHATSAPP_DISPLAY, WHATSAPP_LINK } from '../data/whatsapp';
 import { renderTextLines } from '../utils/renderTextLines';
 import WhatsAppButton from './WhatsAppButton';
 
@@ -45,6 +45,11 @@ export default function Contact() {
               <p className="site-footer__whatsapp">
                 <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
                   WhatsApp: {WHATSAPP_DISPLAY}
+                </a>
+              </p>
+              <p className="site-footer__instagram">
+                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">
+                  {INSTAGRAM_HANDLE}
                 </a>
               </p>
             </div>

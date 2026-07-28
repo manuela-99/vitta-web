@@ -2,6 +2,10 @@ export function canOfferSinTaccOption(product) {
   return product?.canBeGlutenFree === true;
 }
 
+export function isPastasProduct(product) {
+  return product?.category === 'PASTAS';
+}
+
 export function getInitialSinTacc() {
   return false;
 }

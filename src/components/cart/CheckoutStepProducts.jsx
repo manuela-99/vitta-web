@@ -11,7 +11,7 @@ export default function CheckoutStepProducts({
   onIncrement,
   onDecrement,
   onRemove,
-  onSinTaccChange,
+  onUnitSinTaccChange,
   onOrderNotesChange,
   onContinue,
   error,
@@ -29,7 +29,9 @@ export default function CheckoutStepProducts({
               onIncrement={() => onIncrement(item.productId)}
               onDecrement={() => onDecrement(item.productId)}
               onRemove={() => onRemove(item.productId)}
-              onSinTaccChange={(value) => onSinTaccChange(item.productId, value)}
+              onUnitSinTaccChange={(unitIndex, value) =>
+                onUnitSinTaccChange(item.productId, unitIndex, value)
+              }
             />
           ))}
         </ul>

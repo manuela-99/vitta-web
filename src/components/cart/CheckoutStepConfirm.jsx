@@ -1,5 +1,5 @@
 import { DELIVERY_METHODS, isShippingDelivery } from '../../constants/delivery';
-import { canOfferSinTaccOption } from '../../utils/preparation';
+import { buildCartItemMetaParts } from '../../utils/cartItem';
 import { shouldShowPresentationInCart } from '../../utils/cartDisplay';
 import { formatPrice } from '../../utils/price';
 import CheckoutStepActions from './CheckoutStepActions';
@@ -63,19 +63,9 @@ export default function CheckoutStepConfirm({
           <div className="cart-checkout-review__products">
             <ul className="cart-checkout-review__items">
               {items.map((item) => {
-                const showPresentation = shouldShowPresentationInCart(item);
-                const showSinTacc = item.sinTacc && canOfferSinTaccOption(item);
-                const metaParts = [];
-
-                if (showPresentation) {
-                  metaParts.push(item.presentationLabel);
-                }
-
-                metaParts.push(`${item.quantity} ${item.quantityUnit ?? 'unidad'}`);
-
-                if (showSinTacc) {
-                  metaParts.push('Sin TACC');
-                }
+                const metaParts = buildCartItemMetaParts(item, {
+                  includePresentation: shouldShowPresentationInCart(item),
+                });
 
                 return (
                   <li key={item.productId} className="cart-checkout-review__item">

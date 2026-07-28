@@ -37,7 +37,7 @@ export default function CartDrawer() {
     incrementProduct,
     decrementProduct,
     removeProduct,
-    setItemSinTacc,
+    setUnitSinTacc,
     setOrderNotes,
     clearCart,
   } = useCart();
@@ -313,7 +313,7 @@ export default function CartDrawer() {
                 onIncrement={incrementProduct}
                 onDecrement={decrementProduct}
                 onRemove={removeProduct}
-                onSinTaccChange={setItemSinTacc}
+                onUnitSinTaccChange={setUnitSinTacc}
                 onOrderNotesChange={setOrderNotes}
                 onContinue={handleContinueToDelivery}
                 error={orderError}

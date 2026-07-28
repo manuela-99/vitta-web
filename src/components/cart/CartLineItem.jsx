@@ -1,18 +1,21 @@
-import { formatPrice } from '../../utils/price';
-import { canOfferSinTaccOption } from '../../utils/preparation';
+import { formatCartItemSummary, getSinTaccUnits } from '../../utils/cartItem';
 import { shouldShowPresentationInCart } from '../../utils/cartDisplay';
+import { canOfferSinTaccOption, isPastasProduct } from '../../utils/preparation';
+
+const PASTAS_SIN_TACC_NOTICE = 'Versi\u00f3n Sin TACC no disponible.';
 
 export default function CartLineItem({
   item,
   onIncrement,
   onDecrement,
   onRemove,
-  onSinTaccChange,
+  onUnitSinTaccChange,
 }) {
   const showSinTaccOption = canOfferSinTaccOption(item);
+  const showPastasSinTaccNotice = isPastasProduct(item);
   const showPresentation = shouldShowPresentationInCart(item);
   const minQuantity = item.minQuantity ?? 1;
-  const checkboxId = `cart-sin-tacc-${item.productId}`;
+  const sinTaccUnits = getSinTaccUnits(item);
 
   return (
     <li className="cart-drawer__item">
@@ -24,10 +27,10 @@ export default function CartLineItem({
               <span className="cart-num cart-num--sm">{item.presentationLabel}</span>
             </p>
           )}
+          {showPastasSinTaccNotice ? (
+            <p className="cart-item__sin-tacc-unavailable">{PASTAS_SIN_TACC_NOTICE}</p>
+          ) : null}
         </div>
-        <p className="cart-item__line-price menu-price cart-num cart-num--md">
-          {formatPrice(item.subtotal)}
-        </p>
       </div>
 
       <div className="cart-item__actions-row">
@@ -55,22 +58,6 @@ export default function CartLineItem({
           </div>
         </div>
 
-        {showSinTaccOption && (
-          <label className="cart-item__sin-tacc" htmlFor={checkboxId}>
-            <input
-              id={checkboxId}
-              type="checkbox"
-              className="cart-item__sin-tacc-input"
-              checked={item.sinTacc}
-              onChange={(event) => onSinTaccChange(event.target.checked)}
-            />
-            <span className="cart-item__sin-tacc-box" aria-hidden="true">
-              {item.sinTacc && <span className="cart-item__sin-tacc-check">✓</span>}
-            </span>
-            <span className="cart-item__sin-tacc-label">Sin TACC</span>
-          </label>
-        )}
-
         <button
           type="button"
           className="cart-drawer__remove"
@@ -80,6 +67,37 @@ export default function CartLineItem({
           Eliminar
         </button>
       </div>
+
+      {showSinTaccOption && item.quantity > 0 ? (
+        <ul className="cart-item__unit-list">
+          {sinTaccUnits.map((isSinTacc, index) => {
+            const checkboxId = `cart-sin-tacc-${item.productId}-${index}`;
+
+            return (
+              <li key={checkboxId} className="cart-item__unit-row">
+                <span className="cart-item__unit-label">Unidad {index + 1}</span>
+                <label className="cart-item__sin-tacc" htmlFor={checkboxId}>
+                  <input
+                    id={checkboxId}
+                    type="checkbox"
+                    className="cart-item__sin-tacc-input"
+                    checked={isSinTacc}
+                    onChange={(event) => onUnitSinTaccChange(index, event.target.checked)}
+                  />
+                  <span className="cart-item__sin-tacc-box" aria-hidden="true">
+                    {isSinTacc && <span className="cart-item__sin-tacc-check">✓</span>}
+                  </span>
+                  <span className="cart-item__sin-tacc-label">Sin TACC</span>
+                </label>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+
+      <p className="cart-item__summary menu-price cart-num cart-num--md">
+        {formatCartItemSummary(item)}
+      </p>
     </li>
   );
 }

@@ -242,6 +242,7 @@
 .menu-dish-panel__segment,
 .cart-qty__btn,
 .site-footer__whatsapp a,
+.site-footer__instagram a,
 .site-footer__back-top {
   transition:
     background-color 280ms var(--motion-ease),

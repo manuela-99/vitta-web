@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { getCatalogProduct } from '../data/catalog';
 import { formatPrice } from '../utils/price';
-import { getInitialSinTacc, parseStoredSinTacc } from '../utils/preparation';
+import { normalizeSinTaccUnits, parseStoredLineItem } from '../utils/cartItem';
 import { computeCartTotals } from '../utils/whatsappOrder';
 
 const CartContext = createContext(null);
@@ -12,8 +12,13 @@ function buildLineItem(product, quantity, extras = {}) {
   const minQuantity = product.minQuantity ?? 1;
   const safeQuantity = Math.max(minQuantity, quantity);
   const canBeGlutenFree = product.canBeGlutenFree === true;
-  let sinTacc = extras.sinTacc !== undefined ? extras.sinTacc : getInitialSinTacc();
-  if (!canBeGlutenFree) sinTacc = false;
+  const sinTaccUnits = normalizeSinTaccUnits(
+    safeQuantity,
+    extras.sinTaccUnits,
+    canBeGlutenFree,
+    extras.legacyAllSinTacc ?? false,
+  );
+  const sinTaccCount = sinTaccUnits.filter(Boolean).length;
   const totalWeightGrams = product.gramsPerUnit ? product.gramsPerUnit * safeQuantity : null;
 
   return {
@@ -29,7 +34,8 @@ function buildLineItem(product, quantity, extras = {}) {
     gramsPerUnit: product.gramsPerUnit ?? null,
     totalWeightGrams,
     canBeGlutenFree,
-    sinTacc,
+    sinTaccUnits,
+    sinTacc: sinTaccCount > 0 && sinTaccCount === safeQuantity,
     showPresentationInCart: product.showPresentationInCart ?? true,
     minQuantity,
     subtotal: safeQuantity * product.unitPrice,
@@ -44,9 +50,10 @@ function normalizeStoredItems(rawItems) {
       const product = getCatalogProduct(raw.productId);
       if (!product) return null;
 
-      return buildLineItem(product, raw.quantity ?? 1, {
-        sinTacc: parseStoredSinTacc(raw, product),
-      });
+      const { quantity, sinTaccUnits } = parseStoredLineItem(raw, product);
+      if (quantity <= 0) return null;
+
+      return buildLineItem(product, quantity, { sinTaccUnits });
     })
     .filter(Boolean);
 }
@@ -92,64 +99,73 @@ export function CartProvider({ children }) {
   const [orderNotes, setOrderNotesState] = useState(initialCart.orderNotes);
   const [isOpen, setIsOpen] = useState(false);
 
-  const setProductQuantity = useCallback((productId, quantity, preserve = {}) => {
-    const product = getCatalogProduct(productId);
-    if (!product) return;
+  const setProductQuantity = useCallback(
+    (productId, quantity, preserve = {}) => {
+      const product = getCatalogProduct(productId);
+      if (!product) return;
 
-    setItems((current) => {
-      const index = current.findIndex((item) => item.productId === productId);
-      const nextQuantity = Math.max(0, quantity);
-      let next;
+      setItems((current) => {
+        const index = current.findIndex((item) => item.productId === productId);
+        const nextQuantity = Math.max(0, quantity);
+        let next;
 
-      if (nextQuantity === 0) {
-        next = current.filter((item) => item.productId !== productId);
-      } else {
-        const existing = index === -1 ? null : current[index];
-        const lineItem = buildLineItem(product, nextQuantity, {
-          sinTacc:
-            preserve.sinTacc ??
-            existing?.sinTacc ??
-            getInitialSinTacc(),
-        });
-
-        if (index === -1) {
-          next = [...current, lineItem];
+        if (nextQuantity === 0) {
+          next = current.filter((item) => item.productId !== productId);
         } else {
-          next = [...current];
-          next[index] = lineItem;
+          const existing = index === -1 ? null : current[index];
+          const sinTaccUnits = normalizeSinTaccUnits(
+            nextQuantity,
+            preserve.sinTaccUnits ?? existing?.sinTaccUnits,
+            product.canBeGlutenFree,
+          );
+          const lineItem = buildLineItem(product, nextQuantity, { sinTaccUnits });
+
+          if (index === -1) {
+            next = [...current, lineItem];
+          } else {
+            next = [...current];
+            next[index] = lineItem;
+          }
         }
-      }
 
-      persistCart(next, orderNotes);
-      return next;
-    });
-  }, [orderNotes]);
-
-  const addProduct = useCallback((productId, quantity = 1) => {
-    const product = getCatalogProduct(productId);
-    if (!product) return;
-
-    setItems((current) => {
-      const existing = current.find((item) => item.productId === productId);
-      const nextQuantity = (existing?.quantity ?? 0) + quantity;
-      const lineItem = buildLineItem(product, nextQuantity, {
-        sinTacc: existing?.sinTacc ?? getInitialSinTacc(),
+        persistCart(next, orderNotes);
+        return next;
       });
-      const next = existing
-        ? current.map((item) => (item.productId === productId ? lineItem : item))
-        : [...current, lineItem];
+    },
+    [orderNotes],
+  );
 
-      persistCart(next, orderNotes);
-      return next;
-    });
-  }, [orderNotes]);
+  const addProduct = useCallback(
+    (productId, quantity = 1) => {
+      const product = getCatalogProduct(productId);
+      if (!product) return;
+
+      setItems((current) => {
+        const existing = current.find((item) => item.productId === productId);
+        const nextQuantity = (existing?.quantity ?? 0) + quantity;
+        const sinTaccUnits = normalizeSinTaccUnits(
+          nextQuantity,
+          existing?.sinTaccUnits,
+          product.canBeGlutenFree,
+        );
+        const lineItem = buildLineItem(product, nextQuantity, { sinTaccUnits });
+        const next = existing
+          ? current.map((item) => (item.productId === productId ? lineItem : item))
+          : [...current, lineItem];
+
+        persistCart(next, orderNotes);
+        return next;
+      });
+    },
+    [orderNotes],
+  );
 
   const incrementProduct = useCallback(
     (productId) => {
       const current = items.find((item) => item.productId === productId);
       if (!current) return;
       setProductQuantity(productId, current.quantity + 1, {
-        sinTacc: current.sinTacc,
+        sinTaccUnits: current.sinTaccUnits,
       });
     },
     [items, setProductQuantity],
@@ -168,7 +184,7 @@ export function CartProvider({ children }) {
         return;
       }
       setProductQuantity(productId, nextQuantity, {
-        sinTacc: current.sinTacc,
+        sinTaccUnits: current.sinTaccUnits,
       });
     },
     [items, setProductQuantity],
@@ -181,14 +197,25 @@ export function CartProvider({ children }) {
     [setProductQuantity],
   );
 
-  const setItemSinTacc = useCallback(
-    (productId, sinTacc) => {
+  const setUnitSinTacc = useCallback(
+    (productId, unitIndex, sinTacc) => {
       setItems((prev) => {
         const next = prev.map((item) => {
           if (item.productId !== productId) return item;
-          if (sinTacc && !item.canBeGlutenFree) return item;
-          return { ...item, sinTacc };
+          if (!item.canBeGlutenFree) return item;
+          if (unitIndex < 0 || unitIndex >= item.quantity) return item;
+
+          const sinTaccUnits = [...(item.sinTaccUnits ?? normalizeSinTaccUnits(item.quantity, [], true))];
+          sinTaccUnits[unitIndex] = sinTacc;
+          const sinTaccCount = sinTaccUnits.filter(Boolean).length;
+
+          return {
+            ...item,
+            sinTaccUnits,
+            sinTacc: sinTaccCount > 0 && sinTaccCount === item.quantity,
+          };
         });
+
         persistCart(next, orderNotes);
         return next;
       });
@@ -196,10 +223,13 @@ export function CartProvider({ children }) {
     [orderNotes],
   );
 
-  const setOrderNotes = useCallback((notes) => {
-    setOrderNotesState(notes);
-    persistCart(items, notes);
-  }, [items]);
+  const setOrderNotes = useCallback(
+    (notes) => {
+      setOrderNotesState(notes);
+      persistCart(items, notes);
+    },
+    [items],
+  );
 
   const clearCart = useCallback(() => {
     setItems([]);
@@ -226,7 +256,7 @@ export function CartProvider({ children }) {
       incrementProduct,
       decrementProduct,
       removeProduct,
-      setItemSinTacc,
+      setUnitSinTacc,
       setOrderNotes,
       clearCart,
       openCart,
@@ -242,7 +272,7 @@ export function CartProvider({ children }) {
       incrementProduct,
       decrementProduct,
       removeProduct,
-      setItemSinTacc,
+      setUnitSinTacc,
       setOrderNotes,
       clearCart,
       openCart,

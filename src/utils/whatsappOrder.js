@@ -9,6 +9,7 @@ import {
 } from '../constants/delivery';
 import { PREPARATION_TIME_IMPORTANT_TEXT } from '../constants/checkout';
 import { WHATSAPP_NUMBER } from '../data/whatsapp';
+import { expandCartItemsForOrder } from './cartItem';
 import { shouldShowPresentationInWhatsApp } from './cartDisplay';
 import { canOfferSinTaccOption } from './preparation';
 import { formatPrice } from './price';
@@ -155,7 +156,7 @@ export function buildOrderWhatsAppMessage(
   const trimmedNotes = orderNotes.trim();
   const lines = ['Hola Vitta, quiero realizar este pedido:', '', 'PEDIDO'];
 
-  items.forEach((item) => {
+  expandCartItemsForOrder(items).forEach((item) => {
     const itemTitle =
       item.sinTacc && canOfferSinTaccOption(item)
         ? `${item.name} — Sin TACC`
@@ -216,11 +217,12 @@ export function buildOrderRecord(
   return {
     id: `${Date.now()}`,
     createdAt: new Date().toISOString(),
-    items: items.map((item) => ({
+    items: expandCartItemsForOrder(items).map((item) => ({
       productId: item.productId,
       name: item.name,
       presentationLabel: item.presentationLabel,
       quantity: item.quantity,
+      sinTaccUnits: item.sinTaccUnits ?? [],
       unitPrice: item.unitPrice,
       subtotal: item.subtotal,
       sinTacc: item.sinTacc ?? false,

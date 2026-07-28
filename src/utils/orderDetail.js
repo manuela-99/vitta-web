@@ -1,3 +1,4 @@
+import { expandCartItemsForOrder } from './cartItem';
 import { DELIVERY_METHODS, isShippingDelivery } from '../constants/delivery';
 import { formatPrice } from './price';
 
@@ -9,7 +10,7 @@ export function formatOrderDetail(order) {
     '── Productos ──',
   ];
 
-  order.items.forEach((item, index) => {
+  expandCartItemsForOrder(order.items).forEach((item, index) => {
     lines.push(`${index + 1}. ${item.name}${item.sinTacc ? ' — Sin TACC' : ''}`);
     lines.push(`   Cantidad: ${item.quantity} · Subtotal: ${formatPrice(item.subtotal)}`);
   });

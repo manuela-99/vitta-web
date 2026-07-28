@@ -1,3 +1,4 @@
+import { expandCartItemsForOrder } from './cartItem';
 import { isShippingDelivery, toSupabaseDeliveryMethod } from '../constants/delivery';
 import { supabase } from './supabase';
 import { computeOrderTotals } from './whatsappOrder';
@@ -22,7 +23,7 @@ function toNullableText(value) {
 }
 
 function buildOrderItems(items) {
-  return items.map((item) => ({
+  return expandCartItemsForOrder(items).map((item) => ({
     productId: item.productId,
     section: item.section,
     category: item.category,
@@ -32,6 +33,7 @@ function buildOrderItems(items) {
     quantityUnit: item.quantityUnit,
     unitPrice: item.unitPrice,
     subtotal: item.subtotal,
+    sinTaccUnits: item.sinTaccUnits ?? [],
     sinTacc: item.sinTacc ?? false,
     totalWeightGrams: item.totalWeightGrams ?? null,
   }));
