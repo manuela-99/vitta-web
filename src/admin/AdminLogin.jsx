@@ -25,7 +25,7 @@ export default function AdminLogin() {
     const result = await signIn(email.trim(), password);
 
     if (!result.ok) {
-      setError('Credenciales incorrectas. Verifica tu email y contrasena.');
+      setError('Credenciales incorrectas. Verific\u00e1 tu email y contrase\u00f1a.');
       setSubmitting(false);
       return;
     }
@@ -39,7 +39,7 @@ export default function AdminLogin() {
         <p className="admin-login__eyebrow">Acceso privado</p>
         <h1 className="admin-login__title">Vitta - Panel administrativo</h1>
         <p className="admin-login__text">
-          Ingresa con tu cuenta autorizada para ver y gestionar pedidos.
+          {'Ingres\u00e1 con tu cuenta autorizada para ver y gestionar pedidos.'}
         </p>
 
         <form className="admin-login__form" onSubmit={handleSubmit}>
@@ -56,7 +56,7 @@ export default function AdminLogin() {
           </label>
 
           <label className="admin-field">
-            <span className="admin-field__label">Contrasena</span>
+            <span className="admin-field__label">{'Contrase\u00f1a'}</span>
             <input
               className="admin-field__input"
               type="password"
@@ -74,7 +74,7 @@ export default function AdminLogin() {
           ) : null}
 
           <button type="submit" className="admin-button admin-button--primary" disabled={submitting}>
-            {submitting ? 'Ingresando...' : 'Ingresar'}
+            {submitting ? 'Ingresando\u2026' : 'Inici\u00e1 sesi\u00f3n'}
           </button>
         </form>
       </div>

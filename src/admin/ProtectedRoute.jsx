@@ -8,7 +8,7 @@ export default function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div className="admin-page">
-        <p className="admin-loading">Cargando...</p>
+        <p className="admin-loading">{'Cargando\u2026'}</p>
       </div>
     );
   }

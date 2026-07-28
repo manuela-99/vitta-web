@@ -32,9 +32,6 @@ export default function Contact() {
           <p className="contact__body">{renderTextLines(contact.bodyLines)}</p>
           <WhatsAppButton className="contact__whatsapp-btn">
             <span className="contact__whatsapp-label">{contact.cta}</span>
-            <span className="contact__whatsapp-arrow" aria-hidden="true">
-              ↗
-            </span>
           </WhatsAppButton>
         </div>
       </section>

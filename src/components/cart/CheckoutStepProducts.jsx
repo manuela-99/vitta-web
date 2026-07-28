@@ -1,11 +1,13 @@
 import CartLineItem from './CartLineItem';
+import CartDiscountSummary from './CartDiscountSummary';
 import CheckoutStepActions from './CheckoutStepActions';
+import PreparationTimeNotice from './PreparationTimeNotice';
 import { formatPrice } from '../../utils/price';
 
 export default function CheckoutStepProducts({
   items,
   orderNotes,
-  subtotal,
+  orderTotals,
   onIncrement,
   onDecrement,
   onRemove,
@@ -15,7 +17,7 @@ export default function CheckoutStepProducts({
   error,
 }) {
   return (
-    <div className="cart-checkout-step">
+    <div className="cart-checkout-step cart-checkout-step--products">
       <div className="cart-checkout-step__content">
         <p className="cart-checkout-step__heading">Revisá tu pedido</p>
 
@@ -33,7 +35,6 @@ export default function CheckoutStepProducts({
         </ul>
 
         <div className="cart-drawer__order-notes cart-drawer__order-notes--step">
-          <p className="cart-drawer__order-notes-heading">Aclaraciones</p>
           <label className="cart-drawer__order-notes-label" htmlFor="cart-order-notes">
             ¿Querés aclarar algo?
           </label>
@@ -46,11 +47,20 @@ export default function CheckoutStepProducts({
           />
         </div>
 
+        <PreparationTimeNotice />
+
         <div className="cart-drawer__order-summary cart-drawer__order-summary--step">
           <div className="cart-drawer__order-summary-row">
             <span>Subtotal</span>
-            <span className="menu-price cart-num">{formatPrice(subtotal)}</span>
+            <span className="menu-price cart-num">{formatPrice(orderTotals.subtotalBeforeDiscount)}</span>
           </div>
+          <CartDiscountSummary orderTotals={orderTotals} />
+          {orderTotals.discountAmount > 0 ? (
+            <div className="cart-drawer__order-summary-row cart-drawer__order-summary-row--total">
+              <span>Total productos</span>
+              <span className="menu-price cart-num">{formatPrice(orderTotals.subtotal)}</span>
+            </div>
+          ) : null}
         </div>
       </div>
 

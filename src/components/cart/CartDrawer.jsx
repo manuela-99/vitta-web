@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { CHECKOUT_STEPS } from '../../constants/checkout';
 import { DELIVERY_METHODS, EMPTY_DELIVERY_FIELDS } from '../../constants/delivery';
 import { useCart } from '../../context/CartContext';
+import {
+  clearCheckoutData,
+  hasCheckoutData,
+  loadCheckoutData,
+  mergeSavedCheckoutFields,
+  saveCheckoutData,
+} from '../../utils/checkoutStorage';
 import { saveOrder } from '../../utils/orderStorage';
 import { submitOrderToSupabase } from '../../utils/orderSupabase';
 import {
@@ -26,7 +33,6 @@ export default function CartDrawer() {
     items,
     orderNotes,
     isOpen,
-    totalAmount,
     closeCart,
     incrementProduct,
     decrementProduct,
@@ -44,8 +50,11 @@ export default function CartDrawer() {
   const [deliveryFields, setDeliveryFields] = useState(EMPTY_DELIVERY_FIELDS);
   const [fieldErrors, setFieldErrors] = useState({});
   const [orderSent, setOrderSent] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [whatsappFallbackLink, setWhatsappFallbackLink] = useState('');
+  const [hasSavedCheckoutData, setHasSavedCheckoutData] = useState(false);
   const hasSubmittedRef = useRef(false);
+  const hasRestoredCheckoutDataRef = useRef(false);
+  const sessionTouchedRef = useRef(new Set());
 
   useEffect(() => {
     if (isOpen) {
@@ -93,9 +102,33 @@ export default function CartDrawer() {
       setDeliveryFields(EMPTY_DELIVERY_FIELDS);
       setFieldErrors({});
       setOrderSent(false);
-      setIsSubmitting(false);
+      setWhatsappFallbackLink('');
       hasSubmittedRef.current = false;
+      hasRestoredCheckoutDataRef.current = false;
+      sessionTouchedRef.current = new Set();
+      return;
     }
+
+    setHasSavedCheckoutData(hasCheckoutData());
+
+    if (hasRestoredCheckoutDataRef.current) return;
+
+    const saved = loadCheckoutData();
+    if (!saved) {
+      hasRestoredCheckoutDataRef.current = true;
+      return;
+    }
+
+    if (!sessionTouchedRef.current.has('deliveryMethod') && saved.deliveryMethod) {
+      const restoredMethod =
+        saved.deliveryMethod === 'delivery' ? DELIVERY_METHODS.NORTH_ZONE : saved.deliveryMethod;
+      setDeliveryMethod(restoredMethod);
+    }
+
+    setDeliveryFields((current) =>
+      mergeSavedCheckoutFields(current, saved.fields, sessionTouchedRef.current),
+    );
+    hasRestoredCheckoutDataRef.current = true;
   }, [isOpen]);
 
   useEffect(() => {
@@ -108,6 +141,8 @@ export default function CartDrawer() {
 
   const orderTotals = computeOrderTotals(items, deliveryMethod);
   const checkoutData = { deliveryMethod, deliveryFields };
+  const { message: whatsappMessage } = buildOrderWhatsAppMessage(items, orderNotes, checkoutData);
+  const whatsappLink = getOrderWhatsAppLink(whatsappMessage);
 
   const handleViewMenu = () => {
     closeCart();
@@ -118,12 +153,14 @@ export default function CartDrawer() {
   };
 
   const handleDeliveryMethodChange = (method) => {
+    sessionTouchedRef.current.add('deliveryMethod');
     setDeliveryMethod(method);
     setOrderError('');
     setFieldErrors({});
   };
 
   const handleDeliveryFieldChange = (key, value) => {
+    sessionTouchedRef.current.add(key);
     setDeliveryFields((current) => ({ ...current, [key]: value }));
     setOrderError('');
     setFieldErrors((current) => {
@@ -163,14 +200,30 @@ export default function CartDrawer() {
     }
     setFieldErrors({});
     setOrderError('');
+    saveCheckoutData({ deliveryMethod, deliveryFields });
+    setHasSavedCheckoutData(true);
     setCheckoutStep(CHECKOUT_STEPS.CONFIRM);
   };
 
-  const handlePlaceOrder = async () => {
-    if (hasSubmittedRef.current || isSubmitting) return;
+  const handleClearSavedCheckoutData = () => {
+    clearCheckoutData();
+    sessionTouchedRef.current = new Set();
+    setDeliveryMethod('');
+    setDeliveryFields(EMPTY_DELIVERY_FIELDS);
+    setFieldErrors({});
+    setOrderError('');
+    setHasSavedCheckoutData(false);
+  };
+
+  const handleWhatsAppClick = (event) => {
+    if (hasSubmittedRef.current) {
+      event.preventDefault();
+      return;
+    }
 
     const validation = validateCheckout(items, deliveryMethod, deliveryFields);
     if (!validation.valid) {
+      event.preventDefault();
       if (validation.fieldErrors) {
         setFieldErrors(validation.fieldErrors);
         setOrderError('');
@@ -181,43 +234,33 @@ export default function CartDrawer() {
       return;
     }
 
-    const { message, totals } = buildOrderWhatsAppMessage(items, orderNotes, checkoutData);
+    const { totals } = buildOrderWhatsAppMessage(items, orderNotes, checkoutData);
 
     if (totals.total !== orderTotals.total) {
+      event.preventDefault();
       setOrderError('No pudimos confirmar el total del pedido. Intentá nuevamente.');
       return;
     }
 
     hasSubmittedRef.current = true;
-    setIsSubmitting(true);
     setOrderError('');
-
-    const whatsappWindow = window.open('about:blank', '_blank', 'noopener,noreferrer');
-    const result = await submitOrderToSupabase(items, orderNotes, checkoutData);
-
-    if (!result.ok) {
-      whatsappWindow?.close();
-      hasSubmittedRef.current = false;
-      setIsSubmitting(false);
-      setOrderError('No pudimos registrar tu pedido. Intentá nuevamente.');
-      return;
-    }
-
-    const whatsappLink = getOrderWhatsAppLink(message);
-
-    if (whatsappWindow) {
-      whatsappWindow.location.href = whatsappLink;
-    } else {
-      window.open(whatsappLink, '_blank', 'noopener,noreferrer');
-    }
 
     const order = buildOrderRecord(items, orderNotes, checkoutData);
+    const link = event.currentTarget.href;
+
+    submitOrderToSupabase(items, orderNotes, checkoutData).then((result) => {
+      if (!result.ok) {
+        console.error('No se pudo registrar el pedido en Supabase:', result.error);
+      }
+    });
+
     saveOrder(order);
 
-    clearCart();
-    setOrderSent(true);
-    setIsSubmitting(false);
-    setOrderError('');
+    window.setTimeout(() => {
+      clearCart();
+      setWhatsappFallbackLink(link);
+      setOrderSent(true);
+    }, 0);
   };
 
   const getDrawerTitle = () => {
@@ -248,11 +291,14 @@ export default function CartDrawer() {
 
         {orderSent ? (
           <div className="cart-drawer__body cart-drawer__body--checkout">
-            <CheckoutSuccess onClose={handleCloseAfterSuccess} />
+            <CheckoutSuccess
+              onClose={handleCloseAfterSuccess}
+              whatsappLink={whatsappFallbackLink}
+            />
           </div>
         ) : items.length === 0 ? (
           <div className="cart-drawer__empty">
-            <p className="cart-drawer__empty-text">Tu carrito está vacío</p>
+            <p className="cart-drawer__empty-text">Tu carrito está vacío.</p>
             <button type="button" className="cart-drawer__empty-link" onClick={handleViewMenu}>
               Ver menú
             </button>
@@ -263,7 +309,7 @@ export default function CartDrawer() {
               <CheckoutStepProducts
                 items={items}
                 orderNotes={orderNotes}
-                subtotal={totalAmount}
+                orderTotals={orderTotals}
                 onIncrement={incrementProduct}
                 onDecrement={decrementProduct}
                 onRemove={removeProduct}
@@ -279,8 +325,11 @@ export default function CartDrawer() {
                 deliveryMethod={deliveryMethod}
                 deliveryFields={deliveryFields}
                 fieldErrors={fieldErrors}
+                hasSavedCheckoutData={hasSavedCheckoutData}
+                orderTotals={orderTotals}
                 onMethodChange={handleDeliveryMethodChange}
                 onFieldChange={handleDeliveryFieldChange}
+                onClearSavedData={handleClearSavedCheckoutData}
                 onBack={() => {
                   setOrderError('');
                   setFieldErrors({});
@@ -302,9 +351,9 @@ export default function CartDrawer() {
                   setOrderError('');
                   setCheckoutStep(CHECKOUT_STEPS.DELIVERY);
                 }}
-                onSubmit={handlePlaceOrder}
+                whatsappLink={whatsappLink}
+                onWhatsAppClick={handleWhatsAppClick}
                 error={orderError}
-                isSubmitting={isSubmitting}
               />
             )}
           </div>

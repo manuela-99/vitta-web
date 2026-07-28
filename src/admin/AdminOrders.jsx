@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { DELIVERY_LABELS, DELIVERY_METHODS } from '../constants/delivery.js';
+import { getStoredDeliveryLabel } from '../constants/delivery.js';
 import {
   getOrderFilters,
   getVisibleStatusLabel,
@@ -20,12 +20,12 @@ function StatusBadge({ label }) {
   return <span className="admin-badge">{label}</span>;
 }
 
-function DeliveryLabel({ deliveryMethod }) {
-  if (deliveryMethod === DELIVERY_METHODS.PICKUP) {
-    return <span className="admin-delivery-label">Retiro por Beccar</span>;
-  }
-
-  return <span className="admin-delivery-label">{DELIVERY_LABELS[deliveryMethod] ?? deliveryMethod}</span>;
+function DeliveryLabel({ deliveryMethod, deliveryFee = 0 }) {
+  return (
+    <span className="admin-delivery-label">
+      {getStoredDeliveryLabel(deliveryMethod, deliveryFee)}
+    </span>
+  );
 }
 
 export default function AdminOrders() {
@@ -42,7 +42,7 @@ export default function AdminOrders() {
     const { data, error: fetchError } = await fetchOrders();
 
     if (fetchError) {
-      setError('No pudimos cargar los pedidos. Verifica tu sesion e intenta nuevamente.');
+      setError('No pudimos cargar los pedidos. Verific\u00e1 tu sesi\u00f3n e intent\u00e1 nuevamente.');
       setOrders([]);
     } else {
       setOrders(data);
@@ -87,7 +87,7 @@ export default function AdminOrders() {
   };
 
   if (loading) {
-    return <p className="admin-loading">Cargando pedidos...</p>;
+    return <p className="admin-loading">{'Cargando pedidos\u2026'}</p>;
   }
 
   if (error) {
@@ -138,7 +138,7 @@ export default function AdminOrders() {
                   <th>Pedido</th>
                   <th>Fecha y hora</th>
                   <th>Cliente</th>
-                  <th>Telefono</th>
+                  <th>{'Tel\u00e9fono'}</th>
                   <th>Entrega</th>
                   <th>Total</th>
                   <th>Estado</th>
@@ -169,7 +169,10 @@ export default function AdminOrders() {
                       <td className="admin-table__customer">{formatCustomerName(order)}</td>
                       <td className="admin-table__phone">{order.customer_phone}</td>
                       <td className="admin-table__delivery">
-                        <DeliveryLabel deliveryMethod={order.delivery_method} />
+                        <DeliveryLabel
+                          deliveryMethod={order.delivery_method}
+                          deliveryFee={order.delivery_fee}
+                        />
                       </td>
                       <td className="admin-table__price">{formatPrice(order.total)}</td>
                       <td>
@@ -222,7 +225,10 @@ export default function AdminOrders() {
                   </div>
                   <p className="admin-card__customer">{formatCustomerName(order)}</p>
                   <p className="admin-card__delivery">
-                    <DeliveryLabel deliveryMethod={order.delivery_method} />
+                    <DeliveryLabel
+                      deliveryMethod={order.delivery_method}
+                      deliveryFee={order.delivery_fee}
+                    />
                   </p>
                   <div className="admin-card__badges">
                     <StatusBadge label={getVisibleStatusLabel(order)} />

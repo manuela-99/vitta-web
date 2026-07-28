@@ -21,7 +21,7 @@ export default function AdminLayout() {
             <p className="admin-header__subtitle">Pedidos</p>
           </div>
           <button type="button" className="admin-header__logout" onClick={handleSignOut}>
-            Cerrar sesion
+            {'Cerrar sesi\u00f3n'}
           </button>
         </div>
       </header>

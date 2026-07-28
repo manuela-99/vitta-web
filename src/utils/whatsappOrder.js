@@ -1,32 +1,42 @@
 import {
-  DELIVERY_FEE,
   DELIVERY_LABELS,
   DELIVERY_METHODS,
   EMPTY_DELIVERY_FIELDS,
+  getDeliveryFee,
+  isShippingDelivery,
   PAYMENT_METHOD,
   PAYMENT_STATUS,
 } from '../constants/delivery';
+import { PREPARATION_TIME_IMPORTANT_TEXT } from '../constants/checkout';
 import { WHATSAPP_NUMBER } from '../data/whatsapp';
 import { shouldShowPresentationInWhatsApp } from './cartDisplay';
 import { canOfferSinTaccOption } from './preparation';
 import { formatPrice } from './price';
+import { computeViandasPromotion } from './viandasPromotion';
 
 export function computeCartTotals(items) {
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalAmount = items.reduce((sum, item) => sum + item.subtotal, 0);
+  const subtotalBeforeDiscount = items.reduce((sum, item) => sum + item.subtotal, 0);
   const totalWeightGrams = items.reduce(
     (sum, item) => sum + (item.totalWeightGrams ?? 0),
     0,
   );
+  const promotion = computeViandasPromotion(items);
 
-  return { totalUnits, totalAmount, totalWeightGrams };
+  return {
+    totalUnits,
+    subtotalBeforeDiscount,
+    discountPercent: promotion.discountPercent,
+    discountAmount: promotion.discountAmount,
+    totalAmount: subtotalBeforeDiscount - promotion.discountAmount,
+    totalWeightGrams,
+  };
 }
 
 export function computeOrderTotals(items, deliveryMethod) {
   const cartTotals = computeCartTotals(items);
   const subtotal = cartTotals.totalAmount;
-  const deliveryFee =
-    deliveryMethod === DELIVERY_METHODS.DELIVERY ? DELIVERY_FEE : 0;
+  const deliveryFee = getDeliveryFee(deliveryMethod);
   const total = subtotal + deliveryFee;
 
   return {
@@ -77,12 +87,12 @@ export function validateCheckout(items, deliveryMethod, deliveryFields = EMPTY_D
     }
   }
 
-  if (deliveryMethod === DELIVERY_METHODS.DELIVERY) {
+  if (isShippingDelivery(deliveryMethod)) {
     const required = [
       { key: 'recipientName', message: 'Completá nombre y apellido.' },
       { key: 'recipientPhone', message: 'Completá tu teléfono.' },
       { key: 'deliveryAddress', message: 'Completá calle y número.' },
-      { key: 'locality', message: 'Completá la localidad.' },
+      { key: 'locality', message: 'Completá la localidad o barrio.' },
       { key: 'postalCode', message: 'Completá el código postal.' },
     ];
     const fieldErrors = {};
@@ -106,7 +116,7 @@ export function validateCheckout(items, deliveryMethod, deliveryFields = EMPTY_D
 }
 
 function buildWhatsAppDataSection(deliveryMethod, deliveryFields) {
-  if (deliveryMethod === DELIVERY_METHODS.DELIVERY) {
+  if (isShippingDelivery(deliveryMethod)) {
     const lines = [
       '',
       'DATOS',
@@ -118,13 +128,10 @@ function buildWhatsAppDataSection(deliveryMethod, deliveryFields) {
     ];
 
     if (deliveryFields.apartment?.trim()) {
-      lines.push(`Piso/departamento: ${deliveryFields.apartment.trim()}`);
-    }
-    if (deliveryFields.crossStreets?.trim()) {
-      lines.push(`Entre calles: ${deliveryFields.crossStreets.trim()}`);
+      lines.push(`Piso o departamento: ${deliveryFields.apartment.trim()}`);
     }
     if (deliveryFields.deliveryNotes?.trim()) {
-      lines.push(`Indicaciones: ${deliveryFields.deliveryNotes.trim()}`);
+      lines.push(`Referencias de entrega: ${deliveryFields.deliveryNotes.trim()}`);
     }
 
     return lines;
@@ -167,14 +174,20 @@ export function buildOrderWhatsAppMessage(
   }
 
   lines.push('');
-  lines.push(`Subtotal: ${formatPrice(totals.subtotal)}`);
+  lines.push(`Subtotal: ${formatPrice(totals.subtotalBeforeDiscount)}`);
 
-  if (deliveryMethod === DELIVERY_METHODS.DELIVERY) {
-    lines.push('Entrega: Envío a domicilio');
-    lines.push(`Costo de envío: ${formatPrice(totals.deliveryFee)}`);
-  } else {
-    lines.push('Entrega: Retiro sin cargo por Béccar');
+  if (totals.discountAmount > 0) {
+    lines.push(
+      `Descuento Viandas (${totals.discountPercent}% OFF): -${formatPrice(totals.discountAmount)}`,
+    );
+  }
+
+  lines.push(`Entrega: ${DELIVERY_LABELS[deliveryMethod] ?? deliveryMethod}`);
+
+  if (deliveryMethod === DELIVERY_METHODS.PICKUP) {
     lines.push('Costo de envío: Sin cargo');
+  } else {
+    lines.push(`Costo de envío: ${formatPrice(totals.deliveryFee)}`);
   }
 
   lines.push(`Total: ${formatPrice(totals.total)}`);
@@ -182,6 +195,8 @@ export function buildOrderWhatsAppMessage(
   lines.push('');
   lines.push(`Forma de pago: ${PAYMENT_METHOD}`);
   lines.push(`Estado: ${PAYMENT_STATUS}`);
+  lines.push('');
+  lines.push(PREPARATION_TIME_IMPORTANT_TEXT);
   lines.push('');
   lines.push(
     'Quedo a la espera de los datos para realizar la transferencia. Enviaré el comprobante por este medio para confirmar el pedido.',
@@ -196,7 +211,7 @@ export function buildOrderRecord(
   { deliveryMethod, deliveryFields = EMPTY_DELIVERY_FIELDS } = {},
 ) {
   const totals = computeOrderTotals(items, deliveryMethod);
-  const isDelivery = deliveryMethod === DELIVERY_METHODS.DELIVERY;
+  const isShipping = isShippingDelivery(deliveryMethod);
 
   return {
     id: `${Date.now()}`,
@@ -215,16 +230,19 @@ export function buildOrderRecord(
     deliveryMethod,
     deliveryLabel: DELIVERY_LABELS[deliveryMethod],
     deliveryFee: totals.deliveryFee,
+    subtotalBeforeDiscount: totals.subtotalBeforeDiscount,
+    discountPercent: totals.discountPercent,
+    discountAmount: totals.discountAmount,
     subtotal: totals.subtotal,
     total: totals.total,
     recipientName: deliveryFields.recipientName.trim(),
     recipientPhone: deliveryFields.recipientPhone.trim(),
-    deliveryAddress: isDelivery ? deliveryFields.deliveryAddress.trim() : '',
-    locality: isDelivery ? deliveryFields.locality.trim() : '',
-    postalCode: isDelivery ? deliveryFields.postalCode.trim() : '',
-    apartment: isDelivery ? (deliveryFields.apartment?.trim() ?? '') : '',
-    crossStreets: isDelivery ? (deliveryFields.crossStreets?.trim() ?? '') : '',
-    deliveryNotes: isDelivery ? (deliveryFields.deliveryNotes?.trim() ?? '') : '',
+    deliveryAddress: isShipping ? deliveryFields.deliveryAddress.trim() : '',
+    locality: isShipping ? deliveryFields.locality.trim() : '',
+    postalCode: isShipping ? deliveryFields.postalCode.trim() : '',
+    apartment: isShipping ? (deliveryFields.apartment?.trim() ?? '') : '',
+    crossStreets: isShipping ? (deliveryFields.crossStreets?.trim() ?? '') : '',
+    deliveryNotes: isShipping ? (deliveryFields.deliveryNotes?.trim() ?? '') : '',
     paymentMethod: PAYMENT_METHOD,
     paymentStatus: PAYMENT_STATUS,
   };
@@ -232,6 +250,31 @@ export function buildOrderRecord(
 
 export function getOrderWhatsAppLink(message) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+export function isValidOrderWhatsAppUrl(whatsappUrl, message) {
+  if (WHATSAPP_NUMBER !== '5491156440224') {
+    return false;
+  }
+
+  const expectedLink = getOrderWhatsAppLink(message);
+  if (whatsappUrl !== expectedLink) {
+    return false;
+  }
+
+  const isWaMe = whatsappUrl.startsWith(`https://wa.me/${WHATSAPP_NUMBER}`);
+  const isApi = whatsappUrl.startsWith(`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}`);
+
+  if (!isWaMe && !isApi) {
+    return false;
+  }
+
+  try {
+    const url = new URL(whatsappUrl);
+    return url.searchParams.get('text') === message;
+  } catch {
+    return false;
+  }
 }
 
 export function getCheckoutErrorMessage(reason, validationMessage) {

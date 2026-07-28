@@ -1,4 +1,7 @@
-import { DELIVERY_FEE, DELIVERY_METHODS } from '../../constants/delivery';
+import {
+  DELIVERY_FEES,
+  DELIVERY_METHODS,
+} from '../../constants/delivery';
 import { formatPrice } from '../../utils/price';
 
 const DELIVERY_HINT = 'Completá tus datos para continuar';
@@ -6,16 +9,22 @@ const DELIVERY_HINT = 'Completá tus datos para continuar';
 const DELIVERY_OPTIONS = [
   {
     value: DELIVERY_METHODS.PICKUP,
-    title: 'Retiro sin cargo por Béccar',
-    description:
-      'Cuando tu pedido esté listo, te enviaremos la dirección exacta y el horario de retiro por WhatsApp.',
+    title: 'Retiro por Béccar',
+    priceLabel: 'Sin cargo',
+    description: 'Dirección exacta y horario a coordinar por WhatsApp.',
   },
   {
-    value: DELIVERY_METHODS.DELIVERY,
-    title: 'Envío a domicilio',
-    price: DELIVERY_FEE,
+    value: DELIVERY_METHODS.NORTH_ZONE,
+    title: 'Envío a Zona Norte',
+    priceLabel: formatPrice(DELIVERY_FEES[DELIVERY_METHODS.NORTH_ZONE]),
+    description: 'Béccar, San Isidro, Martínez, Acassuso, Vicente López y alrededores.',
+  },
+  {
+    value: DELIVERY_METHODS.CABA,
+    title: 'Envío a CABA',
+    priceLabel: formatPrice(DELIVERY_FEES[DELIVERY_METHODS.CABA]),
     description:
-      'Completá los datos de entrega. Cuando tu pedido esté listo, coordinaremos el envío por WhatsApp.',
+      'Ciudad Autónoma de Buenos Aires: Palermo, Belgrano, Recoleta, Caballito y demás barrios de Capital.',
   },
 ];
 
@@ -24,24 +33,40 @@ const PICKUP_FIELD_CONFIG = [
   { key: 'recipientPhone', label: 'Teléfono', required: true, type: 'tel' },
 ];
 
-const CONTACT_FIELD_CONFIG = [
+const SHIPPING_CONTACT_FIELD_CONFIG = [
   { key: 'recipientName', label: 'Nombre y apellido', required: true },
   { key: 'recipientPhone', label: 'Teléfono', required: true, type: 'tel' },
 ];
 
-const DELIVERY_ADDRESS_FIELD_CONFIG = [
+const SHIPPING_ADDRESS_FIELD_CONFIG = [
   { key: 'deliveryAddress', label: 'Calle y número', required: true },
-  { key: 'locality', label: 'Localidad', required: true },
+  { key: 'locality', label: 'Localidad o barrio', required: true },
   { key: 'postalCode', label: 'Código postal', required: true },
   { key: 'apartment', label: 'Piso o departamento (opcional)', required: false },
-  { key: 'crossStreets', label: 'Entre calles (opcional)', required: false },
-  { key: 'deliveryNotes', label: 'Indicaciones adicionales (opcional)', required: false, multiline: true },
+  {
+    key: 'deliveryNotes',
+    label: 'Referencias de entrega (opcional)',
+    required: false,
+    multiline: true,
+  },
 ];
 
-function DeliveryFields({ fields, deliveryFields, onFieldChange, heading, fieldErrors = {} }) {
+function DeliveryFields({
+  fields,
+  deliveryFields,
+  onFieldChange,
+  heading,
+  headingAction,
+  fieldErrors = {},
+}) {
   return (
     <div className="cart-drawer__delivery-fields">
-      {heading && <p className="cart-drawer__delivery-fields-heading">{heading}</p>}
+      {(heading || headingAction) && (
+        <div className="cart-drawer__delivery-fields-head">
+          {heading ? <p className="cart-drawer__delivery-fields-heading">{heading}</p> : null}
+          {headingAction}
+        </div>
+      )}
       {fields.map((field) => {
         const fieldId = `cart-delivery-field-${field.key}`;
         const commonProps = {
@@ -86,11 +111,26 @@ export default function DeliverySection({
   deliveryFields,
   onMethodChange,
   onFieldChange,
+  onClearSavedData,
+  hasSavedCheckoutData = false,
   fieldErrors = {},
 }) {
   const isPickup = deliveryMethod === DELIVERY_METHODS.PICKUP;
-  const isDelivery = deliveryMethod === DELIVERY_METHODS.DELIVERY;
-  const showHint = isPickup || isDelivery;
+  const isShipping =
+    deliveryMethod === DELIVERY_METHODS.NORTH_ZONE ||
+    deliveryMethod === DELIVERY_METHODS.CABA;
+  const showHint = isPickup || isShipping;
+
+  const clearSavedDataButton =
+    hasSavedCheckoutData && onClearSavedData ? (
+      <button
+        type="button"
+        className="cart-drawer__clear-saved-data"
+        onClick={onClearSavedData}
+      >
+        Borrar datos guardados
+      </button>
+    ) : null;
 
   return (
     <section className="cart-drawer__delivery" aria-labelledby="cart-delivery-heading">
@@ -121,17 +161,9 @@ export default function DeliverySection({
               <span className="cart-drawer__delivery-option-indicator" aria-hidden="true" />
               <span className="cart-drawer__delivery-option-content">
                 <span className="cart-drawer__delivery-option-title">
-                  {option.price != null ? (
-                    <>
-                      {option.title}
-                      {' — '}
-                      <span className="menu-price cart-num cart-num--md">
-                        {formatPrice(option.price)}
-                      </span>
-                    </>
-                  ) : (
-                    option.title
-                  )}
+                  {option.title}
+                  {' · '}
+                  <span className="menu-price cart-num cart-num--md">{option.priceLabel}</span>
                 </span>
                 <span className="cart-drawer__delivery-option-description">{option.description}</span>
               </span>
@@ -148,20 +180,23 @@ export default function DeliverySection({
           deliveryFields={deliveryFields}
           onFieldChange={onFieldChange}
           fieldErrors={fieldErrors}
+          heading="Datos de contacto"
+          headingAction={clearSavedDataButton}
         />
       )}
 
-      {isDelivery && (
+      {isShipping && (
         <>
           <DeliveryFields
-            fields={CONTACT_FIELD_CONFIG}
+            fields={SHIPPING_CONTACT_FIELD_CONFIG}
             deliveryFields={deliveryFields}
             onFieldChange={onFieldChange}
             fieldErrors={fieldErrors}
-            heading="Datos de quien recibe"
+            heading="Datos de contacto"
+            headingAction={clearSavedDataButton}
           />
           <DeliveryFields
-            fields={DELIVERY_ADDRESS_FIELD_CONFIG}
+            fields={SHIPPING_ADDRESS_FIELD_CONFIG}
             deliveryFields={deliveryFields}
             onFieldChange={onFieldChange}
             fieldErrors={fieldErrors}

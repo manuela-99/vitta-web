@@ -1,8 +1,26 @@
-import { DELIVERY_METHODS } from '../../constants/delivery';
+import { DELIVERY_METHODS, isShippingDelivery } from '../../constants/delivery';
 import { canOfferSinTaccOption } from '../../utils/preparation';
 import { shouldShowPresentationInCart } from '../../utils/cartDisplay';
 import { formatPrice } from '../../utils/price';
 import CheckoutStepActions from './CheckoutStepActions';
+import CartDiscountSummary from './CartDiscountSummary';
+import PreparationTimeNotice from './PreparationTimeNotice';
+
+function getDeliverySummaryParts(deliveryMethod, deliveryFee) {
+  if (deliveryMethod === DELIVERY_METHODS.PICKUP) {
+    return { label: 'Retiro por Béccar', value: 'Sin cargo', isPrice: false };
+  }
+
+  if (deliveryMethod === DELIVERY_METHODS.NORTH_ZONE) {
+    return { label: 'Envío a Zona Norte', value: formatPrice(deliveryFee), isPrice: true };
+  }
+
+  if (deliveryMethod === DELIVERY_METHODS.CABA) {
+    return { label: 'Envío a CABA', value: formatPrice(deliveryFee), isPrice: true };
+  }
+
+  return null;
+}
 
 export default function CheckoutStepConfirm({
   items,
@@ -11,26 +29,29 @@ export default function CheckoutStepConfirm({
   deliveryFields,
   orderTotals,
   onBack,
-  onSubmit,
+  whatsappLink,
+  onWhatsAppClick,
   error,
-  isSubmitting,
 }) {
-  const isDelivery = deliveryMethod === DELIVERY_METHODS.DELIVERY;
+  const isShipping = isShippingDelivery(deliveryMethod);
+  const deliverySummary = getDeliverySummaryParts(deliveryMethod, orderTotals.deliveryFee);
 
   return (
-    <div className="cart-checkout-step">
-      <div className="cart-checkout-step__content">
-        <section className="cart-checkout-payment" aria-labelledby="cart-payment-heading">
+    <div className="cart-checkout-step cart-checkout-step--confirm">
+      <div className="cart-checkout-step__content cart-checkout-step__content--confirm">
+        <section
+          className="cart-checkout-payment cart-checkout-payment--highlight"
+          aria-labelledby="cart-payment-heading"
+        >
           <h3 id="cart-payment-heading" className="cart-checkout-payment__title">
-            Pago únicamente por transferencia
+            Pagá por transferencia
           </h3>
           <p className="cart-checkout-payment__text">
-            Al enviar tu pedido, se abrirá una conversación de WhatsApp con todo el detalle de la
-            compra. Te enviaremos por allí los datos para realizar la transferencia. Para confirmar
-            el pedido, deberás enviarnos el comprobante de pago.
+            Al enviar el pedido, se abrirá WhatsApp con el detalle de la compra y los datos para
+            realizar el pago.
           </p>
           <p className="cart-checkout-payment__notice">
-            El pedido se confirma únicamente después de recibir el comprobante de transferencia.
+            El pedido se confirma al recibir el comprobante.
           </p>
         </section>
 
@@ -39,155 +60,157 @@ export default function CheckoutStepConfirm({
             Resumen del pedido
           </h3>
 
-          <ul className="cart-checkout-review__items">
-            {items.map((item) => {
-              const showPresentation = shouldShowPresentationInCart(item);
-              const showSinTacc = item.sinTacc && canOfferSinTaccOption(item);
+          <div className="cart-checkout-review__products">
+            <ul className="cart-checkout-review__items">
+              {items.map((item) => {
+                const showPresentation = shouldShowPresentationInCart(item);
+                const showSinTacc = item.sinTacc && canOfferSinTaccOption(item);
+                const metaParts = [];
 
-              return (
-                <li key={item.productId} className="cart-checkout-review__item">
-                  <div className="cart-checkout-review__item-head">
-                    <span className="cart-checkout-review__item-name">
-                      {item.name}
-                      {showSinTacc ? ' — Sin TACC' : ''}
-                    </span>
-                    <span className="menu-price cart-num cart-checkout-review__item-price">
-                      {formatPrice(item.subtotal)}
-                    </span>
-                  </div>
-                  <p className="cart-checkout-review__item-meta">
-                    {showPresentation && (
-                      <>
-                        <span>{item.presentationLabel}</span>
-                        <span aria-hidden="true"> · </span>
-                      </>
-                    )}
-                    Cantidad: {item.quantity}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
+                if (showPresentation) {
+                  metaParts.push(item.presentationLabel);
+                }
 
-          {orderNotes.trim() && (
-            <p className="cart-checkout-review__notes">
-              <span className="cart-checkout-review__notes-label">Aclaraciones:</span>{' '}
-              {orderNotes.trim()}
-            </p>
-          )}
+                metaParts.push(`${item.quantity} ${item.quantityUnit ?? 'unidad'}`);
 
-          <div className="cart-drawer__order-summary cart-drawer__order-summary--review">
-            <div className="cart-drawer__order-summary-row">
-              <span>Subtotal</span>
-              <span className="menu-price cart-num">{formatPrice(orderTotals.subtotal)}</span>
-            </div>
-            <div className="cart-drawer__order-summary-row">
-              <span>Modalidad de entrega</span>
-              <span>{isDelivery ? 'Envío a domicilio' : 'Retiro sin cargo por Béccar'}</span>
-            </div>
-            <div className="cart-drawer__order-summary-row">
-              <span>Costo del envío</span>
-              <span className="menu-price cart-num">
-                {orderTotals.deliveryFee > 0
-                  ? formatPrice(orderTotals.deliveryFee)
-                  : 'Sin cargo'}
-              </span>
-            </div>
-            <div className="cart-drawer__order-summary-row cart-drawer__order-summary-row--total">
-              <span>Total final</span>
-              <span className="menu-price cart-num cart-num--lg">
-                {formatPrice(orderTotals.total)}
-              </span>
-            </div>
-          </div>
+                if (showSinTacc) {
+                  metaParts.push('Sin TACC');
+                }
 
-          <div className="cart-checkout-review__contact">
-            {isDelivery ? (
-              <>
-                <p className="cart-checkout-review__contact-heading">Datos de contacto</p>
-                <p className="cart-checkout-review__contact-line">
-                  <span>Nombre</span>
-                  <span>{deliveryFields.recipientName.trim()}</span>
-                </p>
-                <p className="cart-checkout-review__contact-line">
-                  <span>Teléfono</span>
-                  <span>{deliveryFields.recipientPhone.trim()}</span>
-                </p>
-                <p className="cart-checkout-review__contact-line">
-                  <span>Dirección</span>
-                  <span>{deliveryFields.deliveryAddress.trim()}</span>
-                </p>
-                <p className="cart-checkout-review__contact-line">
-                  <span>Localidad</span>
-                  <span>{deliveryFields.locality.trim()}</span>
-                </p>
-                <p className="cart-checkout-review__contact-line">
-                  <span>Código postal</span>
-                  <span>{deliveryFields.postalCode.trim()}</span>
-                </p>
-                {deliveryFields.apartment?.trim() && (
-                  <p className="cart-checkout-review__contact-line">
-                    <span>Piso/departamento</span>
-                    <span>{deliveryFields.apartment.trim()}</span>
-                  </p>
-                )}
-                {deliveryFields.crossStreets?.trim() && (
-                  <p className="cart-checkout-review__contact-line">
-                    <span>Entre calles</span>
-                    <span>{deliveryFields.crossStreets.trim()}</span>
-                  </p>
-                )}
-                {deliveryFields.deliveryNotes?.trim() && (
-                  <p className="cart-checkout-review__contact-line">
-                    <span>Indicaciones</span>
-                    <span>{deliveryFields.deliveryNotes.trim()}</span>
-                  </p>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="cart-checkout-review__contact-heading">Datos de contacto</p>
-                <p className="cart-checkout-review__contact-line">
-                  <span>Nombre y apellido</span>
-                  <span>{deliveryFields.recipientName.trim()}</span>
-                </p>
-                <p className="cart-checkout-review__contact-line">
-                  <span>Teléfono</span>
-                  <span>{deliveryFields.recipientPhone.trim()}</span>
-                </p>
-                <p className="cart-checkout-review__pickup-note">
-                  Retiro por Béccar. Dirección exacta y horario a coordinar por WhatsApp.
-                </p>
-              </>
+                return (
+                  <li key={item.productId} className="cart-checkout-review__item">
+                    <div className="cart-checkout-review__item-head">
+                      <span className="cart-checkout-review__item-name">{item.name}</span>
+                      <span className="menu-price cart-num cart-checkout-review__item-price">
+                        {formatPrice(item.subtotal)}
+                      </span>
+                    </div>
+                    <p className="cart-checkout-review__item-meta">{metaParts.join(' · ')}</p>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {orderNotes.trim() && (
+              <p className="cart-checkout-review__notes">
+                <span className="cart-checkout-review__notes-label">Aclaraciones:</span>{' '}
+                {orderNotes.trim()}
+              </p>
             )}
           </div>
 
-          <div className="cart-checkout-review__payment-status">
-            <p className="cart-checkout-review__contact-line">
-              <span>Forma de pago</span>
-              <span>Transferencia</span>
-            </p>
-            <p className="cart-checkout-review__contact-line">
-              <span>Estado</span>
-              <span>Pendiente de pago</span>
-            </p>
+          <div className="cart-drawer__order-summary cart-drawer__order-summary--review">
+            {orderTotals.discountAmount > 0 ? (
+              <>
+                <div className="cart-drawer__order-summary-row">
+                  <span>Subtotal</span>
+                  <span className="menu-price cart-num">
+                    {formatPrice(orderTotals.subtotalBeforeDiscount)}
+                  </span>
+                </div>
+                <CartDiscountSummary orderTotals={orderTotals} />
+              </>
+            ) : null}
+            {deliverySummary ? (
+              <div className="cart-drawer__order-summary-row cart-drawer__order-summary-row--delivery">
+                <span>{deliverySummary.label}</span>
+                <span
+                  className={
+                    deliverySummary.isPrice ? 'menu-price cart-num' : 'cart-checkout-review__delivery-free'
+                  }
+                >
+                  {deliverySummary.value}
+                </span>
+              </div>
+            ) : null}
+            <div className="cart-drawer__order-summary-row cart-drawer__order-summary-row--total">
+              <span>TOTAL</span>
+              <span className="menu-price cart-num cart-num--lg">{formatPrice(orderTotals.total)}</span>
+            </div>
           </div>
         </section>
-      </div>
 
-      <CheckoutStepActions error={error}>
-        <button type="button" className="cart-drawer__checkout-secondary" onClick={onBack}>
-          Volver a entrega
-        </button>
-        <button
-          type="button"
-          className="cart-drawer__checkout"
-          onClick={onSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Registrando pedido…' : 'Enviar pedido por WhatsApp'}
-        </button>
-      </CheckoutStepActions>
+        <section className="cart-checkout-review__contact" aria-labelledby="cart-contact-heading">
+          <h4 id="cart-contact-heading" className="cart-checkout-review__contact-heading">
+            Datos de contacto
+          </h4>
+          <div className="cart-checkout-review__contact-row">
+            <div className="cart-checkout-review__contact-field">
+              <span className="cart-checkout-review__contact-label">Nombre y apellido</span>
+              <span className="cart-checkout-review__contact-value">
+                {deliveryFields.recipientName.trim()}
+              </span>
+            </div>
+            <div className="cart-checkout-review__contact-field cart-checkout-review__contact-field--phone">
+              <span className="cart-checkout-review__contact-label">Teléfono</span>
+              <span className="cart-checkout-review__contact-value">
+                {deliveryFields.recipientPhone.trim()}
+              </span>
+            </div>
+          </div>
+
+          {isShipping ? (
+            (deliveryFields.deliveryAddress.trim() ||
+              deliveryFields.locality.trim() ||
+              deliveryFields.postalCode.trim() ||
+              deliveryFields.apartment?.trim() ||
+              deliveryFields.deliveryNotes?.trim()) && (
+              <div className="cart-checkout-review__address">
+                {deliveryFields.deliveryAddress.trim() ? (
+                  <p className="cart-checkout-review__address-line">
+                    {deliveryFields.deliveryAddress.trim()}
+                  </p>
+                ) : null}
+                {deliveryFields.locality.trim() ? (
+                  <p className="cart-checkout-review__address-detail">
+                    {deliveryFields.locality.trim()}
+                  </p>
+                ) : null}
+                {deliveryFields.postalCode.trim() ? (
+                  <p className="cart-checkout-review__address-detail">
+                    {deliveryFields.postalCode.trim()}
+                  </p>
+                ) : null}
+                {deliveryFields.apartment?.trim() ? (
+                  <p className="cart-checkout-review__address-detail">
+                    {deliveryFields.apartment.trim()}
+                  </p>
+                ) : null}
+                {deliveryFields.deliveryNotes?.trim() ? (
+                  <p className="cart-checkout-review__address-detail">
+                    {deliveryFields.deliveryNotes.trim()}
+                  </p>
+                ) : null}
+              </div>
+            )
+          ) : (
+            <p className="cart-checkout-review__pickup-note">
+              Dirección exacta y horario a coordinar por WhatsApp.
+            </p>
+          )}
+        </section>
+
+        <PreparationTimeNotice variant="important" />
+
+        <CheckoutStepActions error={error} className="cart-checkout-step__footer--confirm">
+          <button type="button" className="cart-drawer__checkout-secondary" onClick={onBack}>
+            Volver a entrega
+          </button>
+          <a
+            href={whatsappLink}
+            className="cart-drawer__checkout"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onWhatsAppClick}
+          >
+            Enviar pedido por WhatsApp
+          </a>
+        </CheckoutStepActions>
+
+        <div className="cart-checkout-confirm__logo">
+          <img src="/images/logo-vitta-negro.png" alt="VITTA" />
+        </div>
+      </div>
     </div>
   );
 }

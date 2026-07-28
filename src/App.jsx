@@ -5,6 +5,7 @@ import HeroPhilosophy from './components/HeroPhilosophy';
 import Services from './components/Services';
 import Events from './components/Events';
 import ViandasIntro from './components/ViandasIntro';
+import ViandasPromoBanner from './components/ViandasPromoBanner';
 import ViandasMenu from './components/ViandasMenu';
 import FreezerIntro from './components/FreezerIntro';
 import FreezerMenu from './components/FreezerMenu';
@@ -77,6 +78,7 @@ function App() {
         <Services />
         <Events />
         <ViandasIntro />
+        <ViandasPromoBanner />
         <ViandasMenu />
         <FreezerIntro />
         <FreezerMenu />

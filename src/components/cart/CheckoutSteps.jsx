@@ -2,7 +2,7 @@ import { CHECKOUT_STEP_LABELS } from '../../constants/checkout';
 
 export default function CheckoutSteps({ currentStep }) {
   return (
-    <nav className="cart-checkout-steps" aria-label="Pasos del checkout">
+    <nav className="cart-checkout-steps" aria-label="Pasos del pedido">
       <ol className="cart-checkout-steps__list">
         {CHECKOUT_STEP_LABELS.map(({ step, number: stepNumber, label }) => {
           const isComplete = step < currentStep;

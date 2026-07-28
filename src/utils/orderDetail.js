@@ -1,4 +1,4 @@
-import { DELIVERY_METHODS } from '../constants/delivery';
+import { DELIVERY_METHODS, isShippingDelivery } from '../constants/delivery';
 import { formatPrice } from './price';
 
 export function formatOrderDetail(order) {
@@ -24,10 +24,10 @@ export function formatOrderDetail(order) {
   lines.push(`Subtotal: ${formatPrice(order.subtotal)}`);
   lines.push(`Modalidad de entrega: ${order.deliveryLabel}`);
 
-  if (order.deliveryMethod === DELIVERY_METHODS.DELIVERY) {
-    lines.push(`Costo del envío: ${formatPrice(order.deliveryFee)}`);
-  } else {
+  if (order.deliveryMethod === DELIVERY_METHODS.PICKUP) {
     lines.push('Costo del envío: Sin cargo');
+  } else {
+    lines.push(`Costo del envío: ${formatPrice(order.deliveryFee)}`);
   }
 
   lines.push(`Total final: ${formatPrice(order.total)}`);
@@ -38,19 +38,20 @@ export function formatOrderDetail(order) {
   lines.push('── Entrega ──');
 
   if (order.deliveryMethod === DELIVERY_METHODS.PICKUP) {
-    lines.push('Retiro sin cargo por Béccar');
+    lines.push('Retiro por Béccar');
     lines.push(`Nombre: ${order.recipientName}`);
     lines.push(`Teléfono: ${order.recipientPhone}`);
-    lines.push('Dirección y horario a coordinar por WhatsApp');
-  } else {
+    lines.push('Dirección exacta y horario a coordinar por WhatsApp.');
+  } else if (isShippingDelivery(order.deliveryMethod)) {
     lines.push(`Destinatario: ${order.recipientName}`);
     lines.push(`Teléfono: ${order.recipientPhone}`);
     lines.push(`Dirección: ${order.deliveryAddress}`);
     lines.push(`Localidad: ${order.locality}`);
     lines.push(`Código postal: ${order.postalCode}`);
-    if (order.apartment?.trim()) lines.push(`Piso/Depto: ${order.apartment.trim()}`);
-    if (order.crossStreets?.trim()) lines.push(`Entre calles: ${order.crossStreets.trim()}`);
-    if (order.deliveryNotes?.trim()) lines.push(`Indicaciones: ${order.deliveryNotes.trim()}`);
+    if (order.apartment?.trim()) lines.push(`Piso o departamento: ${order.apartment.trim()}`);
+    if (order.deliveryNotes?.trim()) {
+      lines.push(`Referencias de entrega: ${order.deliveryNotes.trim()}`);
+    }
   }
 
   return lines.join('\n');

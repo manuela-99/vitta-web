@@ -1,4 +1,4 @@
-import { DELIVERY_FEE, DELIVERY_METHODS } from '../constants/delivery';
+import { isShippingDelivery, toSupabaseDeliveryMethod } from '../constants/delivery';
 import { supabase } from './supabase';
 import { computeOrderTotals } from './whatsappOrder';
 
@@ -43,7 +43,7 @@ export function buildSupabaseOrderPayload(
   { deliveryMethod, deliveryFields } = {},
 ) {
   const totals = computeOrderTotals(items, deliveryMethod);
-  const isDelivery = deliveryMethod === DELIVERY_METHODS.DELIVERY;
+  const isShipping = isShippingDelivery(deliveryMethod);
   const { firstName, lastName } = splitCustomerName(deliveryFields.recipientName ?? '');
 
   return {
@@ -52,14 +52,14 @@ export function buildSupabaseOrderPayload(
     customer_phone: deliveryFields.recipientPhone.trim(),
     items: buildOrderItems(items),
     notes: toNullableText(orderNotes),
-    delivery_method: deliveryMethod,
-    delivery_fee: isDelivery ? DELIVERY_FEE : 0,
-    delivery_address: isDelivery ? deliveryFields.deliveryAddress.trim() : null,
-    locality: isDelivery ? deliveryFields.locality.trim() : null,
-    postal_code: isDelivery ? deliveryFields.postalCode.trim() : null,
-    apartment: isDelivery ? toNullableText(deliveryFields.apartment) : null,
-    cross_streets: isDelivery ? toNullableText(deliveryFields.crossStreets) : null,
-    delivery_notes: isDelivery ? toNullableText(deliveryFields.deliveryNotes) : null,
+    delivery_method: toSupabaseDeliveryMethod(deliveryMethod),
+    delivery_fee: totals.deliveryFee,
+    delivery_address: isShipping ? deliveryFields.deliveryAddress.trim() : null,
+    locality: isShipping ? deliveryFields.locality.trim() : null,
+    postal_code: isShipping ? deliveryFields.postalCode.trim() : null,
+    apartment: isShipping ? toNullableText(deliveryFields.apartment) : null,
+    cross_streets: isShipping ? toNullableText(deliveryFields.crossStreets) : null,
+    delivery_notes: isShipping ? toNullableText(deliveryFields.deliveryNotes) : null,
     subtotal: totals.subtotal,
     total: totals.total,
     payment_method: 'transfer',
@@ -68,17 +68,90 @@ export function buildSupabaseOrderPayload(
   };
 }
 
+function logSupabaseError(context, error) {
+  console.error(`ERROR SUPABASE (${context}):`, {
+    message: error?.message,
+    code: error?.code,
+    details: error?.details,
+    hint: error?.hint,
+  });
+}
+
+async function submitViaApi(payload) {
+  try {
+    const response = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.status === 503) {
+      return { ok: false, skipped: true };
+    }
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      return {
+        ok: false,
+        error: {
+          message: body.error ?? 'Order API request failed',
+          code: body.code,
+        },
+      };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, skipped: true, error };
+  }
+}
+
+async function submitViaRpc(payload) {
+  const { error } = await supabase.rpc('create_public_order', { payload });
+
+  if (error) {
+    logSupabaseError('rpc', error);
+    return { ok: false, error };
+  }
+
+  return { ok: true };
+}
+
+async function submitViaInsert(payload) {
+  const { error } = await supabase.from('orders').insert(payload);
+
+  if (error) {
+    logSupabaseError('insert', error);
+    return { ok: false, error };
+  }
+
+  return { ok: true };
+}
+
 export async function submitOrderToSupabase(
   items,
   orderNotes = '',
   checkoutData = {},
 ) {
   const payload = buildSupabaseOrderPayload(items, orderNotes, checkoutData);
-  const { error } = await supabase.from('orders').insert(payload);
 
-  if (error) {
-    return { ok: false };
+  if (import.meta.env.PROD) {
+    const apiResult = await submitViaApi(payload);
+    if (apiResult.ok) return { ok: true };
+    if (!apiResult.skipped) return { ok: false, error: apiResult.error };
   }
 
-  return { ok: true };
+  const rpcResult = await submitViaRpc(payload);
+  if (rpcResult.ok) return { ok: true };
+
+  const isMissingRpc =
+    rpcResult.error?.code === '42883' ||
+    rpcResult.error?.code === 'PGRST202' ||
+    rpcResult.error?.message?.includes('create_public_order');
+
+  if (!isMissingRpc) {
+    return { ok: false, error: rpcResult.error };
+  }
+
+  return submitViaInsert(payload);
 }

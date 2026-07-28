@@ -1,4 +1,4 @@
-export default function CheckoutSuccess({ onClose }) {
+export default function CheckoutSuccess({ onClose, whatsappLink = '' }) {
   return (
     <div className="cart-drawer__confirmation">
       <p className="cart-drawer__confirmation-lead">Pedido enviado por WhatsApp</p>
@@ -7,6 +7,11 @@ export default function CheckoutSuccess({ onClose }) {
         aguardá los datos para realizar la transferencia. El pedido queda pendiente de pago hasta
         recibir el comprobante.
       </p>
+      {whatsappLink ? (
+        <a href={whatsappLink} className="cart-drawer__checkout cart-drawer__whatsapp-fallback">
+          Abrir WhatsApp
+        </a>
+      ) : null}
       <button type="button" className="cart-drawer__checkout" onClick={onClose}>
         Cerrar
       </button>

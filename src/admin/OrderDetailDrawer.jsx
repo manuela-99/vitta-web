@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DELIVERY_METHODS } from '../constants/delivery.js';
+import { getStoredDeliveryLabel, isShippingDelivery } from '../constants/delivery.js';
 import {
   getStatusUpdatePayload,
   getVisibleStatusId,
@@ -103,7 +103,7 @@ export default function OrderDetailDrawer({ orderId, isOpen, onClose, onOrderUpd
 
     setVisibleStatus(nextVisibleStatus);
     setSavingStatus(true);
-    setStatusMessage('Guardando...');
+    setStatusMessage('Guardando\u2026');
     setStatusError('');
 
     const result = await updateOrder(order.id, payload);
@@ -133,7 +133,7 @@ export default function OrderDetailDrawer({ orderId, isOpen, onClose, onOrderUpd
 
   const orderNumber = order ? formatOrderNumber(order) : '';
   const whatsappLink = order ? buildCustomerWhatsAppLink(order, orderNumber) : '';
-  const isDelivery = order?.delivery_method === DELIVERY_METHODS.DELIVERY;
+  const isShipping = isShippingDelivery(order?.delivery_method);
 
   return (
     <div className={`admin-drawer${isOpen ? ' admin-drawer--open' : ''}`} role="presentation">
@@ -151,7 +151,7 @@ export default function OrderDetailDrawer({ orderId, isOpen, onClose, onOrderUpd
         </header>
 
         <div className="admin-drawer__body">
-          {loading ? <p className="admin-loading">Cargando pedido...</p> : null}
+          {loading ? <p className="admin-loading">{'Cargando pedido\u2026'}</p> : null}
           {error ? <p className="admin-error admin-error--panel" role="alert">{error}</p> : null}
 
           {!loading && !error && order ? (
@@ -159,7 +159,7 @@ export default function OrderDetailDrawer({ orderId, isOpen, onClose, onOrderUpd
               <section className="admin-detail">
                 <h3 className="admin-detail__heading">Cliente</h3>
                 <DetailRow label="Nombre y apellido" value={formatCustomerName(order)} />
-                <DetailRow label="Telefono" value={order.customer_phone} />
+                <DetailRow label={'Tel\u00e9fono'} value={order.customer_phone} />
                 {whatsappLink ? (
                   <a
                     href={whatsappLink}
@@ -204,18 +204,23 @@ export default function OrderDetailDrawer({ orderId, isOpen, onClose, onOrderUpd
 
               <section className="admin-detail">
                 <h3 className="admin-detail__heading">Entrega</h3>
-                {isDelivery ? (
+                {isShipping ? (
                   <>
-                    <DetailRow label="Modalidad" value="Envio a domicilio" />
-                    <DetailRow label="Direccion" value={order.delivery_address} />
+                    <DetailRow
+                      label="Modalidad"
+                      value={getStoredDeliveryLabel(order.delivery_method, order.delivery_fee)}
+                    />
+                    <DetailRow label={'Direcci\u00f3n'} value={order.delivery_address} />
                     <DetailRow label="Localidad" value={order.locality} />
-                    <DetailRow label="Codigo postal" value={order.postal_code} />
-                    <DetailRow label="Piso/departamento" value={order.apartment} />
-                    <DetailRow label="Entre calles" value={order.cross_streets} />
-                    <DetailRow label="Indicaciones" value={order.delivery_notes} />
+                    <DetailRow label={'C\u00f3digo postal'} value={order.postal_code} />
+                    <DetailRow label="Piso o departamento" value={order.apartment} />
+                    <DetailRow label="Referencias de entrega" value={order.delivery_notes} />
                   </>
                 ) : (
-                  <DetailRow label="Modalidad" value="Retiro sin cargo por Beccar" />
+                  <DetailRow
+                    label="Modalidad"
+                    value={getStoredDeliveryLabel(order.delivery_method, order.delivery_fee)}
+                  />
                 )}
               </section>
 
@@ -227,7 +232,7 @@ export default function OrderDetailDrawer({ orderId, isOpen, onClose, onOrderUpd
                     <span>{formatPrice(order.subtotal)}</span>
                   </div>
                   <div className="admin-summary__row">
-                    <span>Envio</span>
+                    <span>{'Env\u00edo'}</span>
                     <span>{order.delivery_fee > 0 ? formatPrice(order.delivery_fee) : 'Sin cargo'}</span>
                   </div>
                   <div className="admin-summary__row admin-summary__row--total">
@@ -251,7 +256,7 @@ export default function OrderDetailDrawer({ orderId, isOpen, onClose, onOrderUpd
                   <span className="admin-detail__label">Estado actual</span>
                   <StatusBadge label={getVisibleStatusLabel(order)} />
                 </div>
-                <DetailRow label="Ultima actualizacion" value={formatOrderDate(getOrderUpdatedAt(order))} />
+                <DetailRow label={'\u00daltima actualizaci\u00f3n'} value={formatOrderDate(getOrderUpdatedAt(order))} />
 
                 <label className="admin-field admin-field--spaced">
                   <span className="admin-field__label">Estado del pedido</span>

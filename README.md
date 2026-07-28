@@ -1,3 +1,26 @@
+# Vitta Web
+
+## Checkout y pedidos (Supabase)
+
+Para que el checkout registre pedidos y abra WhatsApp, ejecutá **todo** el script en Supabase:
+
+`supabase/admin-policies.sql` → SQL Editor → Run
+
+Incluye permisos de esquema, RLS y la función `create_public_order` que usa el frontend.
+
+### Variables de entorno
+
+Copiá `.env.example` a `.env.local` y completá:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+Opcional en **Vercel** (respaldo en producción):
+
+- `SUPABASE_SERVICE_ROLE_KEY` — Settings → API → service_role (secret)
+
+---
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

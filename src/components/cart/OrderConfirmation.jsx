@@ -1,20 +1,8 @@
-import { DELIVERY_METHODS } from '../../constants/delivery';
 import { formatOrderDetail } from '../../utils/orderDetail';
 import { formatPrice } from '../../utils/price';
-import { buildOrderClosingText } from '../../utils/whatsappOrder';
 
 export default function OrderConfirmation({ order, onClose }) {
   const detailText = formatOrderDetail(order);
-  const closingText = buildOrderClosingText(order.deliveryMethod, {
-    recipientName: order.recipientName,
-    recipientPhone: order.recipientPhone,
-    deliveryAddress: order.deliveryAddress,
-    locality: order.locality,
-    postalCode: order.postalCode,
-    apartment: order.apartment,
-    crossStreets: order.crossStreets,
-    deliveryNotes: order.deliveryNotes,
-  });
 
   return (
     <div className="cart-drawer__confirmation">
@@ -34,7 +22,7 @@ export default function OrderConfirmation({ order, onClose }) {
           <span>{order.deliveryLabel}</span>
         </div>
         <div className="cart-drawer__order-summary-row">
-          <span>{order.deliveryMethod === DELIVERY_METHODS.DELIVERY ? 'Envío a domicilio' : 'Retiro'}</span>
+          <span>Costo de envío</span>
           <span className="menu-price cart-num">
             {order.deliveryFee > 0 ? formatPrice(order.deliveryFee) : 'Sin cargo'}
           </span>
@@ -52,8 +40,6 @@ export default function OrderConfirmation({ order, onClose }) {
           <span>{order.paymentStatus}</span>
         </div>
       </div>
-
-      <p className="cart-drawer__confirmation-closing">{closingText}</p>
 
       <div className="cart-drawer__confirmation-detail">
         <p className="cart-drawer__confirmation-detail-heading">Detalle del pedido</p>

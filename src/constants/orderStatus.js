@@ -33,7 +33,7 @@ export const VISIBLE_STATUS_LABELS = {
   [VISIBLE_STATUS.PENDING_RECEIPT]: 'Pendiente de comprobante',
   [VISIBLE_STATUS.REJECTED]: 'Comprobante rechazado',
   [VISIBLE_STATUS.CONFIRMED]: 'Confirmado',
-  [VISIBLE_STATUS.PREPARING]: 'En preparacion',
+  [VISIBLE_STATUS.PREPARING]: 'En preparaci\u00f3n',
   [VISIBLE_STATUS.READY_FOR_PICKUP]: 'Listo para retirar',
   [VISIBLE_STATUS.OUT_FOR_DELIVERY]: 'En camino',
   [VISIBLE_STATUS.COMPLETED]: 'Entregado',
@@ -55,7 +55,7 @@ const BASE_ORDER_FILTERS = [
   { id: 'all', label: 'Todos' },
   { id: VISIBLE_STATUS.PENDING_RECEIPT, label: 'Pendientes' },
   { id: VISIBLE_STATUS.CONFIRMED, label: 'Confirmados' },
-  { id: VISIBLE_STATUS.PREPARING, label: 'En preparacion' },
+  { id: VISIBLE_STATUS.PREPARING, label: 'En preparaci\u00f3n' },
   { id: VISIBLE_STATUS.READY_FOR_PICKUP, label: 'Listos' },
   { id: VISIBLE_STATUS.OUT_FOR_DELIVERY, label: 'En camino' },
   { id: VISIBLE_STATUS.COMPLETED, label: 'Entregados' },
@@ -75,7 +75,7 @@ export const ORDER_COUNTERS = [
   },
   {
     id: VISIBLE_STATUS.PREPARING,
-    label: 'En preparacion',
+    label: 'En preparaci\u00f3n',
     matches: (order) => getVisibleStatusId(order) === VISIBLE_STATUS.PREPARING,
   },
   {
