@@ -76,11 +76,12 @@ function buildViandasProducts(category) {
   const config = VIANDAS_PRESENTATIONS[category.name];
   if (!config) return [];
 
-  const itemNames = category.items.map((item) => (typeof item === 'string' ? item : item.name));
+  return category.items.flatMap((item) => {
+    const itemName = typeof item === 'string' ? item : item.name;
+    const prices = typeof item === 'object' && item.prices ? item.prices : category.prices;
 
-  return itemNames.flatMap((itemName) =>
-    config.variants.map((variant) => {
-      const unitPrice = parsePriceFromDisplay(category.prices[variant.priceIndex]);
+    return config.variants.map((variant) => {
+      const unitPrice = parsePriceFromDisplay(prices[variant.priceIndex]);
       return {
         id: `viandas-${slug(category.name)}-${slug(itemName)}-${variant.key}`,
         section: 'viandas',
@@ -96,8 +97,8 @@ function buildViandasProducts(category) {
         canBeGlutenFree: getCanBeGlutenFree(category.name),
         showPresentationInCart: config.variants.length > 1,
       };
-    }),
-  );
+    });
+  });
 }
 
 function buildFreezerFlavorProducts(categoryName, categoryId, itemNames, presentation, unitPrice, minQuantity = 1) {

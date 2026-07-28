@@ -35,8 +35,18 @@ function renderFactNote(text) {
   );
 }
 
-function FactBlock({ heading, body, bodyLines, children }) {
-  const renderBody = (text) => withEditorialNumerals(text);
+function renderConservacionBody(text) {
+  return text.split(/(\d+\s*d[ií]as|\d+\s*meses)/i).map((part, index) =>
+    /^\d+\s*d[ií]as$/i.test(part) || /^\d+\s*meses$/i.test(part) ? (
+      <strong key={index}>{part}</strong>
+    ) : (
+      <span key={index}>{part}</span>
+    ),
+  );
+}
+
+function FactBlock({ heading, body, bodyLines, children, renderBodyContent }) {
+  const renderBody = renderBodyContent ?? withEditorialNumerals;
 
   return (
     <article className="viandas-intro__fact">
@@ -98,6 +108,7 @@ export default function ViandasIntro() {
           <FactBlock
             heading={conservacionBlock.heading}
             body={conservacionBlock.body}
+            renderBodyContent={renderConservacionBody}
           />
         </Reveal>
 

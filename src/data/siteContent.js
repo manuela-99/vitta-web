@@ -147,8 +147,14 @@ export const viandasMenuPart1 = {
           name: 'PESCADOS',
           prices: ['$20.900 · Individual abundante (250 g)', '$39.900 · 2-3 personas (500 g)'],
           items: [
-            'Salmón teriyaki',
-            'Salmón a las hierbas',
+            {
+              name: 'Salmón teriyaki',
+              prices: ['$25.900 · Individual abundante (250 g)', '$50.900 · 2-3 personas (500 g)'],
+            },
+            {
+              name: 'Salmón a las hierbas',
+              prices: ['$25.900 · Individual abundante (250 g)', '$50.900 · 2-3 personas (500 g)'],
+            },
             'Merluza gratinada',
             'Trucha al limón',
           ],
@@ -243,9 +249,9 @@ export const viandasMenu = {
   primaryCategories: [
     viandasMenuPart1.columns[0].categories[0],
     viandasMenuPart1.columns[1].categories[0],
-    viandasMenuPart1.columns[2].categories[0],
     viandasMenuPart1.columns[0].categories[1],
     viandasMenuPart1.columns[1].categories[1],
+    viandasMenuPart1.columns[2].categories[0],
     viandasMenuPart1.columns[2].categories[1],
   ],
   wideCategories: viandasMenuPart2.columns,
