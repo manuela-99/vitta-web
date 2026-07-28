@@ -1236,15 +1236,30 @@ ul {
   }
 
   .viandas-intro__facts {
-    grid-template-columns: 1fr;
-    row-gap: clamp(40px, 8vw, 48px);
+    row-gap: 0;
     column-gap: 0;
   }
 
+  .viandas-intro__fact-heading {
+    font-size: clamp(1.0625rem, 4.5vw, 1.1875rem);
+  }
+
+  .viandas-intro__fact-rule {
+    margin: clamp(6px, 1.5vw, 8px) 0 clamp(10px, 2vw, 12px);
+  }
+
   .viandas-intro__fact-body,
-  .viandas-intro__portions-line,
+  .viandas-intro__portions-label,
   .viandas-intro__fact-note {
+    font-size: clamp(1.0625rem, 4.5vw, 1.1875rem);
+    line-height: 1.5;
     max-width: 100%;
+  }
+
+  .viandas-intro__fact + .viandas-intro__fact {
+    margin-top: clamp(28px, 6vw, 36px);
+    padding-top: clamp(28px, 6vw, 36px);
+    border-top: 1px solid var(--frame-line-on-cream);
   }
 
   .viandas-intro__tacc {
@@ -1315,27 +1330,32 @@ ul {
 
 .viandas-intro__facts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: clamp(70px, 7vw, 90px);
-  row-gap: clamp(55px, 5.5vw, 65px);
+  grid-template-columns: 1fr;
+  row-gap: 0;
+  column-gap: 0;
   min-width: 0;
   align-items: start;
+  width: 100%;
 }
 
 .viandas-intro__fact {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   min-width: 0;
+  width: 100%;
+  text-align: left;
 }
 
 .viandas-intro__fact-heading {
   font-family: var(--font-serif);
-  font-size: clamp(0.6875rem, 0.8vw, 0.75rem);
+  font-size: clamp(1.0625rem, 4.5vw, 1.1875rem);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   line-height: var(--leading-tight);
   margin: 0;
+  text-align: left;
 }
 
 .viandas-intro__fact-rule {
@@ -1343,36 +1363,50 @@ ul {
   height: 0;
   border: none;
   border-top: 1px solid var(--frame-line-on-cream);
-  margin: clamp(10px, 1.5vw, 12px) 0;
+  margin: clamp(6px, 1.5vw, 8px) 0 clamp(10px, 2vw, 12px);
   flex-shrink: 0;
 }
 
 .viandas-intro__fact-body,
-.viandas-intro__portions-line,
+.viandas-intro__portions-label,
 .viandas-intro__fact-note {
   font-family: var(--font-serif);
-  font-size: clamp(0.8125rem, 0.95vw, 0.875rem);
+  font-size: clamp(1.0625rem, 4.5vw, 1.1875rem);
   font-weight: 400;
-  line-height: 1.45;
+  line-height: 1.5;
   text-wrap: pretty;
   word-spacing: normal;
   margin: 0;
-  max-width: min(26rem, 100%);
+  max-width: 100%;
+  text-align: left;
 }
 
 .viandas-intro__portions-detail {
   display: flex;
   flex-direction: column;
-  gap: clamp(4px, 0.6vw, 6px);
-  margin-top: clamp(8px, 1.2vw, 10px);
+  gap: clamp(10px, 2vw, 14px);
+  margin-top: clamp(12px, 2.5vw, 16px);
+  width: 100%;
 }
 
-.viandas-intro__portions-line {
-  max-width: min(26rem, 100%);
+.viandas-intro__portions-row {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, auto) minmax(0, 1fr);
+  column-gap: clamp(12px, 3vw, 20px);
+  align-items: baseline;
+  width: 100%;
+}
+
+.viandas-intro__portions-weight {
+  font-weight: 600;
+}
+
+.viandas-intro__portions-label {
+  min-width: 0;
 }
 
 .viandas-intro__fact-note {
-  margin-top: clamp(8px, 1.2vw, 10px);
+  margin-top: clamp(10px, 2vw, 14px);
 }
 
 .viandas-intro__fact-body strong {
@@ -1452,50 +1486,59 @@ ul {
     display: grid;
     box-sizing: border-box;
     width: 100%;
-    max-width: 990px;
-    margin: clamp(65px, 5vw, 75px) auto 0;
-    grid-template-columns: repeat(2, minmax(0, 400px));
-    column-gap: 70px;
-    row-gap: 70px;
+    max-width: min(990px, 100%);
+    margin: clamp(48px, 5vw, 65px) auto 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(48px, 6vw, 70px);
+    row-gap: clamp(48px, 5vw, 70px);
     justify-content: center;
     align-items: start;
   }
 
   .viandas-intro__fact {
     width: 100%;
-    max-width: 400px;
+    max-width: none;
     margin: 0;
     min-height: auto;
   }
 
+  .viandas-intro__fact + .viandas-intro__fact {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
   .viandas-intro__fact:nth-child(odd),
   .viandas-intro__fact:nth-child(even) {
-    justify-self: start;
+    justify-self: stretch;
   }
 
   .viandas-intro__fact-heading {
-    margin: 0 0 24px;
+    font-size: clamp(0.6875rem, 0.8vw, 0.75rem);
+    letter-spacing: 0.12em;
+    margin: 0;
   }
 
   .viandas-intro__fact-rule {
-    margin: 0 0 28px;
+    margin: clamp(8px, 1vw, 10px) 0 clamp(14px, 1.5vw, 18px);
   }
 
   .viandas-intro__fact-body,
-  .viandas-intro__portions-line,
+  .viandas-intro__portions-label,
   .viandas-intro__fact-note {
+    font-size: clamp(0.8125rem, 0.95vw, 0.875rem);
     max-width: 100%;
     line-height: 1.5;
     text-align: left;
   }
 
   .viandas-intro__portions-detail {
-    margin-top: 22px;
-    gap: 14px;
+    margin-top: clamp(12px, 1.5vw, 16px);
+    gap: clamp(10px, 1.2vw, 14px);
   }
 
   .viandas-intro__fact-note {
-    margin-top: 18px;
+    margin-top: clamp(10px, 1.2vw, 14px);
   }
 
   .viandas-intro__fact-break {
@@ -1552,14 +1595,22 @@ ul {
 
 @media (min-width: 1200px) {
   .viandas-intro__facts {
-    grid-template-columns: repeat(2, 440px);
-    column-gap: 110px;
-    row-gap: 70px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-width: min(1200px, 100%);
+    column-gap: clamp(40px, 3.5vw, 56px);
+    row-gap: clamp(48px, 4vw, 64px);
   }
 
   .viandas-intro__fact {
-    width: 440px;
-    max-width: 100%;
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .viandas-intro__portions-row {
+    grid-template-columns: 1fr;
+    row-gap: 0.2rem;
   }
 }
 
@@ -4119,9 +4170,9 @@ ul {
 
 .cart-drawer__delivery-option {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: clamp(10px, 1.5vw, 12px);
-  padding: clamp(12px, 1.8vw, 14px);
+  padding: clamp(10px, 1.5vw, 12px) clamp(12px, 1.8vw, 14px);
   border: 1px solid var(--frame-line-on-cream);
   background: var(--cream-paper);
   cursor: pointer;
@@ -4149,7 +4200,7 @@ ul {
   flex-shrink: 0;
   width: 0.875rem;
   height: 0.875rem;
-  margin-top: 0.15rem;
+  margin: 0;
   border: 1px solid var(--black);
   border-radius: 50%;
   background: transparent;
@@ -4167,24 +4218,19 @@ ul {
 }
 
 .cart-drawer__delivery-option-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  flex: 1;
   min-width: 0;
+  text-align: left;
 }
 
 .cart-drawer__delivery-option-title {
+  display: block;
   font-family: var(--font-serif);
   font-size: var(--text-body-sm);
   font-weight: 600;
   line-height: 1.35;
-}
-
-.cart-drawer__delivery-option-description {
-  font-family: var(--font-serif);
-  font-size: 0.6875rem;
-  line-height: 1.45;
-  color: rgba(0, 0, 0, 0.62);
+  text-align: left;
+  text-wrap: pretty;
 }
 
 .cart-drawer__delivery-fields {

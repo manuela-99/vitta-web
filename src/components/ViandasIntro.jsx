@@ -82,11 +82,12 @@ export default function ViandasIntro() {
           >
             <div className="viandas-intro__portions-detail">
               {portionsBlock.detail.map((item) => (
-                <p key={item.weight} className="viandas-intro__portions-line">
-                  <span className="editorial-num editorial-num--oldstyle">{item.weight}</span>
-                  {' · '}
-                  {item.label}
-                </p>
+                <div key={item.weight} className="viandas-intro__portions-row">
+                  <span className="viandas-intro__portions-weight editorial-num editorial-num--oldstyle">
+                    {item.weight}
+                  </span>
+                  <span className="viandas-intro__portions-label">{item.label}</span>
+                </div>
               ))}
             </div>
           </FactBlock>

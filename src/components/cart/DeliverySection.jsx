@@ -11,20 +11,16 @@ const DELIVERY_OPTIONS = [
     value: DELIVERY_METHODS.PICKUP,
     title: 'Retiro por Béccar',
     priceLabel: 'Sin cargo',
-    description: 'Dirección exacta y horario a coordinar por WhatsApp.',
   },
   {
     value: DELIVERY_METHODS.NORTH_ZONE,
     title: 'Envío a Zona Norte',
     priceLabel: formatPrice(DELIVERY_FEES[DELIVERY_METHODS.NORTH_ZONE]),
-    description: 'Béccar, San Isidro, Martínez, Acassuso, Vicente López y alrededores.',
   },
   {
     value: DELIVERY_METHODS.CABA,
     title: 'Envío a CABA',
     priceLabel: formatPrice(DELIVERY_FEES[DELIVERY_METHODS.CABA]),
-    description:
-      'Ciudad Autónoma de Buenos Aires: Palermo, Belgrano, Recoleta, Caballito y demás barrios de Capital.',
   },
 ];
 
@@ -165,7 +161,6 @@ export default function DeliverySection({
                   {' · '}
                   <span className="menu-price cart-num cart-num--md">{option.priceLabel}</span>
                 </span>
-                <span className="cart-drawer__delivery-option-description">{option.description}</span>
               </span>
             </label>
           );
