@@ -3540,6 +3540,25 @@ ul {
   background: rgba(0, 0, 0, 0.025);
   box-sizing: border-box;
   text-align: left;
+  height: auto;
+  min-height: 0;
+}
+
+.cart-drawer__preparation-notice__heading--step {
+  margin: 0 0 clamp(10px, 1.6vw, 12px);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.82);
+}
+
+.cart-drawer__preparation-notice__lines {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vw, 10px);
+  align-items: flex-start;
+  text-align: left;
 }
 
 .cart-drawer__preparation-notice__line {

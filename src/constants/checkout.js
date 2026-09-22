@@ -10,8 +10,13 @@ export const CHECKOUT_STEP_LABELS = [
   { step: CHECKOUT_STEPS.CONFIRM, number: '03', label: 'Confirmación' },
 ];
 
-export const PREPARATION_TIME_NOTICE =
-  'Tiempo estimado de preparación: 48 a 72 horas hábiles.';
+export const DELIVERY_ORDERS_NOTICE_TITLE = 'ENTREGAS Y PEDIDOS';
+
+export const DELIVERY_ORDERS_NOTICE_LINES = [
+  'Entregamos únicamente los jueves y viernes.',
+  'Pedí hasta el martes para recibir esa misma semana.',
+  'Los pedidos realizados desde el miércoles se entregan la semana siguiente.',
+];
 
 export const PREPARATION_TIME_IMPORTANT_HEADING = 'Aclaración importante';
 
